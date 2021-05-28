@@ -6,6 +6,9 @@ authors = ["Awes Mubarak <contact@awesmubarak.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+anki = "^2.1.44"
+aqt = "^2.1.44"
+mypy = "^0.812"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
