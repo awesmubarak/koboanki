@@ -80,6 +80,17 @@ html5lib = ["html5lib"]
 lxml = ["lxml"]
 
 [[package]]
+name = "bs4"
+version = "0.0.1"
+description = "Dummy package for Beautiful Soup"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+beautifulsoup4 = "*"
+
+[[package]]
 name = "certifi"
 version = "2020.12.5"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -159,6 +170,25 @@ python-versions = "*"
 [package.dependencies]
 Flask = ">=0.9"
 Six = "*"
+
+[[package]]
+name = "futures"
+version = "3.1.1"
+description = "Backport of the concurrent.futures package from Python 3.2"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "goslate"
+version = "1.5.1"
+description = "Goslate: Free Google Translate API"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+futures = "*"
 
 [[package]]
 name = "idna"
@@ -319,25 +349,26 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
+name = "pydictionary"
+version = "2.0.1"
+description = "A real dictionary module for Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+bs4 = "*"
+click = "*"
+goslate = "*"
+requests = "*"
+
+[[package]]
 name = "pyparsing"
 version = "2.4.7"
 description = "Python parsing module"
 category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-
-[[package]]
-name = "pyq"
-version = "5.0.0"
-description = "PyQ - Python for kdb+"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.extras]
-all = ["pytest (>=2.6.4,!=3.2.0,!=3.3.0)", "pytest-pyq", "pytest-cov (>=2.4)", "coverage (>=4.2)", "ipython", "py", "numpy", "prompt-toolkit", "pygments-q"]
-ipython = ["ipython"]
-test = ["pytest (>=2.6.4,!=3.2.0,!=3.3.0)", "pytest-pyq", "pytest-cov (>=2.4)", "coverage (>=4.2)"]
 
 [[package]]
 name = "pyqt5"
@@ -548,7 +579,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "1658c9d29bd0fcda8b74f827b1c29a4e93546b6ffbb4d84e0fb483a13af653ed"
+content-hash = "66bc8d1a7ab3b6eb550b027a0d8f183aa0d003dcf828eb2d66e5b67d33dda73c"
 
 [metadata.files]
 anki = [
@@ -571,6 +602,9 @@ beautifulsoup4 = [
     {file = "beautifulsoup4-4.9.3-py2-none-any.whl", hash = "sha256:4c98143716ef1cb40bf7f39a8e3eec8f8b009509e74904ba3a7b315431577e35"},
     {file = "beautifulsoup4-4.9.3-py3-none-any.whl", hash = "sha256:fff47e031e34ec82bf17e00da8f592fe7de69aeea38be00523c04623c04fb666"},
     {file = "beautifulsoup4-4.9.3.tar.gz", hash = "sha256:84729e322ad1d5b4d25f805bfa05b902dd96450f43842c4e99067d5e1369eb25"},
+]
+bs4 = [
+    {file = "bs4-0.0.1.tar.gz", hash = "sha256:36ecea1fd7cc5c0c6e4a1ff075df26d50da647b75376626cc186e2212886dd3a"},
 ]
 certifi = [
     {file = "certifi-2020.12.5-py2.py3-none-any.whl", hash = "sha256:719a74fb9e33b9bd44cc7f3a8d94bc35e4049deebe19ba7d8e108280cfd59830"},
@@ -603,6 +637,15 @@ flask = [
 flask-cors = [
     {file = "Flask-Cors-3.0.10.tar.gz", hash = "sha256:b60839393f3b84a0f3746f6cdca56c1ad7426aa738b70d6c61375857823181de"},
     {file = "Flask_Cors-3.0.10-py2.py3-none-any.whl", hash = "sha256:74efc975af1194fc7891ff5cd85b0f7478be4f7f59fe158102e91abb72bb4438"},
+]
+futures = [
+    {file = "futures-3.1.1-py2-none-any.whl", hash = "sha256:c4884a65654a7c45435063e14ae85280eb1f111d94e542396717ba9828c4337f"},
+    {file = "futures-3.1.1-py3-none-any.whl", hash = "sha256:3a44f286998ae64f0cc083682fcfec16c406134a81a589a5de445d7bb7c2751b"},
+    {file = "futures-3.1.1.tar.gz", hash = "sha256:51ecb45f0add83c806c68e4b06106f90db260585b25ef2abfcda0bd95c0132fd"},
+]
+goslate = [
+    {file = "goslate-1.5.1-py2.7.egg", hash = "sha256:c9b7855f0984ae5012b8b8f06511e81ba197ec7b634756413b2f503554c535aa"},
+    {file = "goslate-1.5.1.tar.gz", hash = "sha256:dee7cf08fd7d744fbb3477d28ea6a98a11b363c138d7577b4b097f517581f864"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
@@ -784,12 +827,13 @@ py = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
     {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
 ]
+pydictionary = [
+    {file = "PyDictionary-2.0.1-py3-none-any.whl", hash = "sha256:95b91cf26cc9d859f6c76be2a8c0d864819d4826f21f1709619bda02a3b4e1dc"},
+    {file = "PyDictionary-2.0.1.tar.gz", hash = "sha256:c250815c238ec042098918764e5b743955df9612a129ae5218d5f37ddd0f9634"},
+]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
-]
-pyq = [
-    {file = "pyq-5.0.0.tar.gz", hash = "sha256:32393dd7233d0e7051702214b8cb262c670baa8da339cc916b512dfe1f64af94"},
 ]
 pyqt5 = [
     {file = "PyQt5-5.15.4-cp36.cp37.cp38.cp39-abi3-macosx_10_13_intel.whl", hash = "sha256:8c0848ba790a895801d5bfd171da31cad3e551dbcc4e59677a3b622de2ceca98"},
