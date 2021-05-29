@@ -1,16 +1,12 @@
 from aqt import mw
 from aqt.utils import showInfo, qconnect, tr
 from aqt.qt import *
-import anki.importing as importing
-from aqt import forms
-from anki.importing.base import Importer
 import sqlite3
 
 import requests
 
 def akMenuAction() -> None:
     cardCount = mw.col.cardCount()
-    forms.importing.Ui_ImportDialog()
 
     # open file selection menu
     # TODO: open menu for this
@@ -28,11 +24,17 @@ def akMenuAction() -> None:
         response = requests.get(f"https://api.dictionaryapi.dev/api/v2/entries/en_US/{word}").json()
         try:
             definition = response[0]["meanings"][0]["definitions"][0]["definition"]
+            note = mw.col.newNote()
+            note["Front"] = word
+            note["Back"] = definition
+            mw.col.addNote(note)
         except:
             pass
 
     # add the words to the right file
+    mw.col.save()
 
+    # done
     showInfo("Done importing!")
 
 
