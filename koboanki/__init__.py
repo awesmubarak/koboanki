@@ -28,12 +28,12 @@ def akMenuAction() -> None:
 
     # get folder name
     folderName = QFileDialog.getExistingDirectory(
-        None, "Select KOBO drive", "/", QFileDialog.ShowDirsOnly
+        None, "Select KOBO drive", path.expanduser("~"), QFileDialog.ShowDirsOnly
     )
     if not folderName:
         return 0
 
-    fileLocation = folderName + "/.kobo/KoboReader.sqlite"
+    fileLocation = path.join(folderName, ".kobo", "KoboReader.sqlite")
     if not (path.exists(fileLocation) and path.isfile(fileLocation)):
         showInfo(f"File path not found: {fileLocation}")
         return 1
