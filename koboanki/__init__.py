@@ -2,17 +2,12 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from aqt import mw
-from aqt.utils import showInfo, qconnect, tr
+from aqt.utils import showInfo, qconnect, tr, getFile
 from aqt.qt import *
 import sqlite3
 import requests
-
-
-def getWordList(file_location: str) -> list:
-    connection = sqlite3.connect(file_location)
-    cursor = connection.cursor()
-    rows = [row[0] for row in cursor.execute("SELECT text from WordList").fetchall()]
-    return rows
+from os import path
+from PyQt5.QtWidgets import QFileDialog, QWidget
 
 
 def getWordDefinition(word: str) -> str:
@@ -31,13 +26,24 @@ def getWordDefinition(word: str) -> str:
 def akMenuAction() -> None:
     cardCount = mw.col.cardCount()
 
-    # open file selection menu
-    # TODO: open menu for this
-    dir_location = "/Volumes/KOBOeReader"
-    file_location = dir_location + "/.kobo/KoboReader.sqlite"
+    # get folder name
+    folderName = QFileDialog.getExistingDirectory(
+        None, "Select KOBO drive", "/", QFileDialog.ShowDirsOnly
+    )
+    if not folderName:
+        return 0
+
+    fileLocation = folderName + "/.kobo/KoboReader.sqlite"
+    if not (path.exists(fileLocation) and path.isfile(fileLocation)):
+        showInfo(f"File path not found: {fileLocation}")
+        return 1
 
     # read in the file list
-    wordlist = getWordList(file_location)
+    connection = sqlite3.connect(fileLocation)
+    cursor = connection.cursor()
+    wordlist = [
+        row[0] for row in cursor.execute("SELECT text from WordList").fetchall()
+    ]
 
     # find repeated words and don't use them because
     ankiWordlist = []
