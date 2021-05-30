@@ -46,17 +46,15 @@ def akMenuAction() -> None:
     ]
 
     # find repeated words and don't use them because
-    ankiWordlist = []
-    card = mw.col.sched.getCard()
-    while card:
-        note = card.note()
-        ankiWordlist.append(note.items()[0][1])
-        note.flush()
-        card = mw.col.sched.getCard()
+    ankiWordList = []
 
-    newWords = [word for word in wordlist if word not in ankiWordlist]
+    ids = mw.col.find_notes("")
+    ankiWordList = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
+    newWords = [word for word in wordlist if word not in ankiWordList]
 
     # find definitions
+    addedWords = []
+    failedWords = []
     for word in newWords:
         definition = getWordDefinition(word)
         if definition:
@@ -65,12 +63,19 @@ def akMenuAction() -> None:
             note["Back"] = definition
             mw.col.addNote(note)
 
+            addedWords.append(word)
+        else:
+            failedWords.append(word)
+
     # add the words to the right file
     # TODO: this just adds it to a default one i think? idk how this works
     mw.col.save()
 
     # done
     showInfo("Done importing!")
+    showInfo(
+        f"Added words: {[w for w in addedWords]}\n\nFailed words: {[w for w in failedWords]}"
+    )
 
 
 action = QAction("Import KOBO wordlist", mw)
