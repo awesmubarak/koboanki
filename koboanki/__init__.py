@@ -20,7 +20,11 @@ def getWordDefinition(word: str) -> str:
     response = requests.get(
         f"https://api.dictionaryapi.dev/api/v2/entries/en_US/{word}"
     ).json()
-    definition = response[0]["meanings"][0]["definitions"][0]["definition"]
+
+    try:
+        definition = response[0]["meanings"][0]["definitions"][0]["definition"]
+    except:
+        definition = ""
     return definition
 
 
@@ -33,20 +37,27 @@ def akMenuAction() -> None:
     file_location = dir_location + "/.kobo/KoboReader.sqlite"
 
     # read in the file list
-    rows = getWordList(file_location)
+    wordlist = getWordList(file_location)
+
+    # find repeated words and don't use them because
+    ankiWordlist = []
+    card = mw.col.sched.getCard()
+    while card:
+        note = card.note()
+        ankiWordlist.append(note.items()[0][1])
+        note.flush()
+        card = mw.col.sched.getCard()
+
+    newWords = [word for word in wordlist if word not in ankiWordlist]
 
     # find definitions
-    for word in rows:
-        try:
-            definition = getWordDefinition(word)
-        except:
-            # word definition not found
-            pass
-
-        note = mw.col.newNote()
-        note["Front"] = word
-        note["Back"] = definition
-        mw.col.addNote(note)
+    for word in newWords:
+        definition = getWordDefinition(word)
+        if definition:
+            note = mw.col.newNote()
+            note["Front"] = word
+            note["Back"] = definition
+            mw.col.addNote(note)
 
     # add the words to the right file
     # TODO: this just adds it to a default one i think? idk how this works
