@@ -1,3 +1,3 @@
 set -euf -o pipefail
 
-zip -r koboanki.ankiaddon koboanki
+cd koboanki && zip ../koboanki.ankiaddon __init__.py
