@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "koboanki"
-version = "0.1.0"
-description = ""
+version = "1.0.0"
+description = "Imports saved words from kobo ereaders into anki as flashcards"
 authors = ["Awes Mubarak <contact@awesmubarak.com>"]
 license = "AGPL-3.0-or-later"
 readme = "README.md"
