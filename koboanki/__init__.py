@@ -11,12 +11,28 @@ from PyQt5.QtWidgets import QFileDialog
 from sys import exit
 
 
+def checkInternetConnection() -> bool:
+    """Makes a request to the dictionary API to validate internet connection"""
+    valid = True
+    try:
+        response = requests.get(
+            f"https://api.dictionaryapi.dev/api/v2/entries/en_US/test"
+        ).json()
+    except requests.exceptions.ConnectionError:
+        valid = False
+    return valid
+
+
 def getWordDefinition(word: str) -> str:
     """Return the definition of a word that's passed to it. Empty if no definition"""
     # TODO: add citation (https://www.lexico.com/about)
-    response = requests.get(
-        f"https://api.dictionaryapi.dev/api/v2/entries/en_US/{word}"
-    ).json()
+    response = []
+    try:
+        response = requests.get(
+            f"https://api.dictionaryapi.dev/api/v2/entries/en_US/{word}"
+        ).json()
+    except requests.exceptions.ConnectionError:
+        definition = ""
 
     try:
         definition = response[0]["meanings"][0]["definitions"][0]["definition"]
@@ -87,6 +103,12 @@ def addToCol(wordDict: dict) -> None:
 
 def akMenuAction() -> None:
     """Main function, binds to menu item"""
+
+    # check internet connection
+    if not checkInternetConnection():
+        showInfo("Can't access server, faulty internet connection?")
+        return
+
     # get folder name
     fileLocation = getFileName()
 
