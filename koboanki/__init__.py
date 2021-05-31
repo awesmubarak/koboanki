@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QFileDialog
 from sys import exit
 
 
-def checkInternetConnection() -> bool:
+def check_internet_connection() -> bool:
     """Makes a request to the dictionary API to validate internet connection"""
     valid = True
     try:
@@ -23,8 +23,8 @@ def checkInternetConnection() -> bool:
     return valid
 
 
-def getWordDefinition(word: str) -> str:
-    """Return the definition of a word that's passed to it. Empty if no definition"""
+def get_word_definition(word: str) -> str:
+    """Return the definition of a word that's passed to it. Empty if no defs."""
     # TODO: add citation (https://www.lexico.com/about)
     response = []
     try:
@@ -41,26 +41,26 @@ def getWordDefinition(word: str) -> str:
     return definition
 
 
-def getFileName() -> str:
-    """Returns a file location for the sqlite3 database. Empty if error or not found."""
-    folderName = QFileDialog.getExistingDirectory(
+def get_file_location() -> str:
+    """Returns the kobo db file locatoin. Empty if error or not found."""
+    folder_name = QFileDialog.getExistingDirectory(
         None, "Select KOBO drive", path.expanduser("~"), QFileDialog.ShowDirsOnly
     )
 
-    if folderName:
-        fileLocation = path.join(folderName, ".kobo", "KoboReader.sqlite")
-        if not (path.exists(fileLocation) and path.isfile(fileLocation)):
-            showInfo(f"File path not found: {fileLocation}")
-            fileLocation = ""
+    if folder_name:
+        file_location = path.join(folder_name, ".kobo", "KoboReader.sqlite")
+        if not (path.exists(file_location) and path.isfile(file_location)):
+            showInfo(f"File path not found: {file_location}")
+            file_location = ""
     else:
-        fileLocation = ""
+        file_location = ""
 
-    return fileLocation
+    return file_location
 
 
-def getKoboWordList(fileLocation: str) -> list:
+def get_kobo_wordlist(file_location: str) -> list:
     """Opens the kobo file and returns a list of saved words."""
-    connection = sqlite3.connect(fileLocation)
+    connection = sqlite3.connect(file_location)
     cursor = connection.cursor()
     wordlist = [
         row[0] for row in cursor.execute("SELECT text from WordList").fetchall()
@@ -68,30 +68,30 @@ def getKoboWordList(fileLocation: str) -> list:
     return wordlist
 
 
-def getNeworldList(koboWordList: list) -> list:
+def get_new_wordlist(kobo_wordlist: list) -> list:
     """Returns a list of only words not already added to anki."""
     ids = mw.col.find_notes("")
-    ankiWordList = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
-    newWords = [word for word in koboWordList if word not in ankiWordList]
-    return newWords
+    anki_wordlist = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
+    new_wordlist = [word for word in kobo_wordlist if word not in anki_wordlist]
+    return new_wordlist
 
 
-def getDefinitions(wordList: list) -> tuple:
-    """Finds the definition for each word. If not definition is found adds to a list."""
-    wordDict = {}
-    failedWods = []
-    for word in wordList:
-        definition = getWordDefinition(word)
+def get_definitions(wordlist: list) -> tuple:
+    """Returns a dict of definitions and list of failed words."""
+    word_defs = {}
+    failed_words = []
+    for word in wordlist:
+        definition = get_word_definition(word)
         if definition:
-            wordDict[word] = definition
+            word_defs[word] = definition
         else:
-            failedWods.append(word)
-    return (wordDict, failedWods)
+            failed_words.append(word)
+    return (word_defs, failed_words)
 
 
-def addToCol(wordDict: dict) -> None:
+def add_to_collection(word_defs: dict) -> None:
     """Adds valid words to the collection"""
-    for word, definition in wordDict.items():
+    for word, definition in word_defs.items():
         note = mw.col.newNote()
         note["Front"] = word
         note["Back"] = definition
@@ -101,38 +101,38 @@ def addToCol(wordDict: dict) -> None:
     return
 
 
-def akMenuAction() -> None:
+def koboanki_menu_action() -> None:
     """Main function, binds to menu item"""
 
     # check internet connection
-    if not checkInternetConnection():
+    if not check_internet_connection():
         showInfo("Can't access server, faulty internet connection?")
         return
 
     # get folder name
-    fileLocation = getFileName()
+    file_location = get_file_location()
 
-    if not fileLocation:
+    if not file_location:
         return
 
     # read in the file list
-    wordlist = getKoboWordList(fileLocation)
+    wordlist = get_kobo_wordlist(file_location)
 
     if not wordlist:
         showInfo("No saved words found")
         return
 
     # find newwords, get definitions, add to collection
-    newWords = getNeworldList(wordlist)
-    wordDict, failedWords = getDefinitions(newWords)
-    addToCol(wordDict)
+    new_wordlist = get_new_wordlist(wordlist)
+    word_defs, failed_words = get_definitions(new_wordlist)
+    add_to_collection(word_defs)
 
     # done
     showInfo(
-        f"Added words: {[w for w in wordDict.keys()]}\n\nFailed words: {[w for w in failedWords]}"
+        f"Added words: {[w for w in word_defs.keys()]}\n\nFailed words: {[w for w in failed_words]}"
     )
 
 
 action = QAction("Import KOBO wordlist", mw)
-qconnect(action.triggered, akMenuAction)
+qconnect(action.triggered, koboanki_menu_action)
 mw.form.menuTools.addAction(action)
