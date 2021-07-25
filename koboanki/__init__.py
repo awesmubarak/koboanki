@@ -148,6 +148,8 @@ def koboanki_menu_action() -> None:
 
     # get the config file
     config = mw.addonManager.getConfig(__name__)
+    if len(config["languageList"]) == 0:
+        showInfo("Language list is empty")
     if not all(_ for _ in [try_link(l) for l in [get_link(l, "test") for l in config["languageList"]]]):
         showInfo("One or more language codes in the configuration file don't work")
         return
