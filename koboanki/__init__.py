@@ -8,7 +8,8 @@ import sqlite3
 import requests
 from os import path
 from PyQt5.QtWidgets import QFileDialog
-from sys import exit
+import threading
+from queue import Queue
 
 
 def get_link(language_code:str, word:str) -> str:
@@ -64,26 +65,49 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     return new_wordlist
 
 
-def get_definitions(wordlist: list, language_list: list) -> tuple:
-    """Returns a dict of definitions and list of failed words."""
-    word_defs = {}
-    failed_words = []
-    for word in wordlist:
-        definition = ""
+def get_definitions(wordlist:list, language_list:list) -> tuple:
+    """Concurently find defintions for all words"""
+    queue = Queue(maxsize=0)
+    num_theads = min(50, len(wordlist))
+    definitions = [{} for _ in wordlist]
+    for i in range(len(wordlist)):
+        queue.put((i, wordlist[i], language_list))
 
-        # try to get a definition for each language
+    # create threads
+    for i in range(num_theads):
+        worker = threading.Thread(target=queue_handler, args=(queue,definitions))
+        worker.setDaemon(True)
+        worker.start()
+    queue.join()
+
+    # seperate working and broken words
+    definition_dict = {}
+    failed_words = []
+    for word, definition in zip(wordlist, definitions):
+        if definition:
+            definition_dict[word] = definition
+        else:
+            failed_words.append(word)
+
+    return (definition_dict, failed_words)
+
+
+def queue_handler(queue: Queue, definitions: list) -> Bool:
+    """"Threads are created pointing at this function to get the word defintions"""
+    while not queue.empty():
+        work = queue.get()
+        word = work[1]
+        language_list = work[2]
+
+        definition = ""
         for language in language_list:
             definition = get_word_definition(word, language)
             if definition != "":
                 break
 
-        # deal with found/not found
-        if definition:
-            word_defs[word] = definition
-        else:
-            failed_words.append(word)
-
-    return (word_defs, failed_words)
+        definitions[work[0]] = definition
+        queue.task_done()
+        return True
 
 
 def get_word_definition(word: str, language: str) -> str:
