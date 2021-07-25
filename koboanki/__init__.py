@@ -18,7 +18,6 @@ def get_link(language_code:str, word:str) -> str:
 
 def try_link(link) -> bool:
     "Attempts to connect to a given link. Used to verify internet connection and language codes"
-    showInfo(str(link))
     valid = True
     try:
         response = requests.get(link)
@@ -92,7 +91,7 @@ def get_definitions(wordlist:list, language_list:list) -> tuple:
     return (definition_dict, failed_words)
 
 
-def queue_handler(queue: Queue, definitions: list) -> Bool:
+def queue_handler(queue: Queue, definitions: list) -> bool:
     """"Threads are created pointing at this function to get the word defintions"""
     while not queue.empty():
         work = queue.get()
@@ -107,23 +106,43 @@ def queue_handler(queue: Queue, definitions: list) -> Bool:
 
         definitions[work[0]] = definition
         queue.task_done()
-        return True
+    return True
 
 
 def get_word_definition(word: str, language: str) -> str:
     """Return the definition of a word that's passed to it. Empty if no defs."""
-    # TODO: add citation (https://www.lexico.com/about)
     response = []
+    word_text = ""
     try:
         response = requests.get(get_link(language, word)).json()
     except requests.exceptions.ConnectionError:
-        definition = ""
+        return word_text
 
     try:
-        definition = response[0]["meanings"][0]["definitions"][0]["definition"]
+        for word_def in response:
+            word_text = ""
+            definition = ""
+
+            phonetics = word_def["phonetics"]
+            meanings = word_def["meanings"]
+
+            phonetics = [phoenetic["text"] for phoenetic in phonetics]
+            word_text = f"<small>{str(phonetics)}</small>"
+
+            for meaning_n, meaning in enumerate(meanings):
+                part_of_speech = meaning["partOfSpeech"]
+                definition = meaning["definitions"][0]["definition"]
+                example = meaning["definitions"][0]["example"]
+
+                word_text += f"<br><b>{meaning_n+1}. </b> <small>{part_of_speech} - </small>{definition} <i> {example} </i>"
+
+            # sometimes there's pronounciation info but not definition
+            if definition == "":
+                word_text = ""
+
     except:
-        definition = ""
-    return definition
+        word_text = ""
+    return word_text
 
 
 def add_to_collection(word_defs: dict) -> None:

@@ -1,10 +1,20 @@
 # CHANGELOG.md
 
-## Unreleased
+## 2.0.0 (2021-07-25)
+
+Added:
+
+- Threading!!! Up to 50 words can now be looked up at once, so adding words will be _much_ faster.
+- Multilingual support for 13 languages!
+
+Changed:
+
+- The formatting of the notes is totally different now, with information on the pronounciation of the word, multiple definitions, and example text.
 
 Fixed:
 
 - Specify card type explicitly (#4)
+
 
 ## 1.1.0 (2021-05-31)
 
