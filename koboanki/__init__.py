@@ -92,7 +92,7 @@ def get_definitions(wordlist: list) -> tuple:
 def add_to_collection(word_defs: dict) -> None:
     """Adds valid words to the collection"""
     for word, definition in word_defs.items():
-        note = mw.col.newNote()
+        note = mw.col.newNote("Basic")
         note["Front"] = word
         note["Back"] = definition
         mw.col.addNote(note)

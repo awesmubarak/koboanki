@@ -1,5 +1,11 @@
 # CHANGELOG.md
 
+## Unreleased
+
+Fixed:
+
+- Specify card type explicitly (#4)
+
 ## 1.1.0 (2021-05-31)
 
 Fixed:
