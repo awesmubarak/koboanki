@@ -11,34 +11,22 @@ from PyQt5.QtWidgets import QFileDialog
 from sys import exit
 
 
-def check_internet_connection() -> bool:
-    """Makes a request to the dictionary API to validate internet connection"""
+def get_link(language_code:str, word:str) -> str:
+    return f"https://api.dictionaryapi.dev/api/v2/entries/{language_code}/{word}"
+
+
+def try_link(link) -> bool:
+    "Attempts to connect to a given link. Used to verify internet connection and language codes"
+    showInfo(str(link))
     valid = True
     try:
-        response = requests.get(
-            f"https://api.dictionaryapi.dev/api/v2/entries/en_US/test"
-        ).json()
+        response = requests.get(link)
+        if response.status_code == 404:
+            valid = False
     except requests.exceptions.ConnectionError:
         valid = False
+
     return valid
-
-
-def get_word_definition(word: str) -> str:
-    """Return the definition of a word that's passed to it. Empty if no defs."""
-    # TODO: add citation (https://www.lexico.com/about)
-    response = []
-    try:
-        response = requests.get(
-            f"https://api.dictionaryapi.dev/api/v2/entries/en_US/{word}"
-        ).json()
-    except requests.exceptions.ConnectionError:
-        definition = ""
-
-    try:
-        definition = response[0]["meanings"][0]["definitions"][0]["definition"]
-    except:
-        definition = ""
-    return definition
 
 
 def get_file_location() -> str:
@@ -76,17 +64,42 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     return new_wordlist
 
 
-def get_definitions(wordlist: list) -> tuple:
+def get_definitions(wordlist: list, language_list: list) -> tuple:
     """Returns a dict of definitions and list of failed words."""
     word_defs = {}
     failed_words = []
     for word in wordlist:
-        definition = get_word_definition(word)
+        definition = ""
+
+        # try to get a definition for each language
+        for language in language_list:
+            definition = get_word_definition(word, language)
+            if definition != "":
+                break
+
+        # deal with found/not found
         if definition:
             word_defs[word] = definition
         else:
             failed_words.append(word)
+
     return (word_defs, failed_words)
+
+
+def get_word_definition(word: str, language: str) -> str:
+    """Return the definition of a word that's passed to it. Empty if no defs."""
+    # TODO: add citation (https://www.lexico.com/about)
+    response = []
+    try:
+        response = requests.get(get_link(language, word)).json()
+    except requests.exceptions.ConnectionError:
+        definition = ""
+
+    try:
+        definition = response[0]["meanings"][0]["definitions"][0]["definition"]
+    except:
+        definition = ""
+    return definition
 
 
 def add_to_collection(word_defs: dict) -> None:
@@ -105,26 +118,30 @@ def koboanki_menu_action() -> None:
     """Main function, binds to menu item"""
 
     # check internet connection
-    if not check_internet_connection():
+    if not try_link(get_link("en_US", "test")):
         showInfo("Can't access server, faulty internet connection?")
+        return
+
+    # get the config file
+    config = mw.addonManager.getConfig(__name__)
+    if not all(_ for _ in [try_link(l) for l in [get_link(l, "test") for l in config["languageList"]]]):
+        showInfo("One or more language codes in the configuration file don't work")
         return
 
     # get folder name
     file_location = get_file_location()
-
     if not file_location:
         return
 
     # read in the file list
     wordlist = get_kobo_wordlist(file_location)
-
     if not wordlist:
         showInfo("No saved words found")
         return
 
     # find newwords, get definitions, add to collection
     new_wordlist = get_new_wordlist(wordlist)
-    word_defs, failed_words = get_definitions(new_wordlist)
+    word_defs, failed_words = get_definitions(new_wordlist, config["languageList"])
     add_to_collection(word_defs)
 
     # done
