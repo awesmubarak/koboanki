@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+Changed:
+
+- Erroneous language codes will now be displayed in the popup
+
 Fixed:
 
 - Will now exit on empty language code list
+- Empty config files won't cause crashes (#6)
 
 ## 2.0.0 (2021-07-25)
 

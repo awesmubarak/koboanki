@@ -165,13 +165,23 @@ def koboanki_menu_action() -> None:
         showInfo("Can't access server, faulty internet connection?")
         return
 
-    # get the config file
+    # get the config file and validate
     config = mw.addonManager.getConfig(__name__)
+    if not config:
+        showInfo("Config file is empty")
+        return
+    if not "languageList" in config:
+        showInfo("Config file does not contain a language list")
+        return
     if len(config["languageList"]) == 0:
         showInfo("Language list is empty")
         return
-    if not all(_ for _ in [try_link(l) for l in [get_link(l, "test") for l in config["languageList"]]]):
-        showInfo("One or more language codes in the configuration file don't work")
+
+    links = {code: get_link(code, "test") for code in config["languageList"]}
+    links_statuses = {code: try_link(link) for code, link in links.items()}
+    failed_codes = [code for code, status in links_statuses.items() if not status]
+    if failed_codes:
+        showInfo(f"The following language codes are not valid: {failed_codes}")
         return
 
     # get folder name
