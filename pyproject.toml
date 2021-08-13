@@ -1,11 +1,9 @@
 [tool.poetry]
 name = "koboanki"
 version = "1.1.0"
-description = "An anki addon to import saved words from kobo ereaders.
-
-"
+description = "An anki addon to import saved words from kobo ereaders."
 authors = ["Awes Mubarak <contact@awesmubarak.com>"]
-license = "AGPL-3.0-or-later"
+license = "MIT"
 readme = "README.md"
 repository = "https://github.com/awesmubarak/koboanki"
 homepage  = "https://github.com/awesmubarak/koboanki"

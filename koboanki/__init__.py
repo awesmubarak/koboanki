@@ -1,6 +1,3 @@
-# Copyright: Awes Mubarak <contact@awesmubarak.com>
-# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
 from aqt import mw
 from aqt.utils import showInfo, qconnect
 import sqlite3
