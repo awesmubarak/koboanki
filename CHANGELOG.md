@@ -8,6 +8,7 @@ Changed:
 
 Fixed:
 
+- Updated release script so the default config file is included in the release
 - Will now exit on empty language code list
 - Empty config files won't cause crashes (#6)
 
