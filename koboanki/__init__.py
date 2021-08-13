@@ -2,8 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from aqt import mw
-from aqt.utils import showInfo, qconnect, tr, getFile
-from aqt.qt import *
+from aqt.utils import showInfo, qconnect
 import sqlite3
 import requests
 from os import path
