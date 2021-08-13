@@ -1,5 +1,11 @@
 # CHANGELOG.md
 
+## Unreleased
+
+Fixed:
+
+- Will now exit on empty language code list
+
 ## 2.0.0 (2021-07-25)
 
 Added:
