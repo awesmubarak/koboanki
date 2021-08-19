@@ -8,7 +8,8 @@ from os import path
 from queue import Queue
 from PyQt5.QtWidgets import QFileDialog
 
-def get_link(language_code:str, word:str) -> str:
+
+def get_link(language_code: str, word: str) -> str:
     return f"https://api.dictionaryapi.dev/api/v2/entries/{language_code}/{word}"
 
 
@@ -60,7 +61,7 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     return new_wordlist
 
 
-def get_definitions(wordlist:list, language_list:list) -> tuple:
+def get_definitions(wordlist: list, language_list: list) -> tuple:
     """Concurently find defintions for all words"""
     queue = Queue(maxsize=0)
     num_theads = min(50, len(wordlist))
@@ -70,7 +71,7 @@ def get_definitions(wordlist:list, language_list:list) -> tuple:
 
     # create threads
     for i in range(num_theads):
-        worker = threading.Thread(target=queue_handler, args=(queue,definitions))
+        worker = threading.Thread(target=queue_handler, args=(queue, definitions))
         worker.setDaemon(True)
         worker.start()
     queue.join()
@@ -88,7 +89,7 @@ def get_definitions(wordlist:list, language_list:list) -> tuple:
 
 
 def queue_handler(queue: Queue, definitions: list) -> bool:
-    """"Threads are created pointing at this function to get the word defintions"""
+    """Threads are created pointing at this function to get the word defintions"""
     while not queue.empty():
         work = queue.get()
         word = work[1]
