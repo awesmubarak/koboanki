@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+Added:
+
+- Config field to specify number of download threads
+- Timeouts to requests (with config option)
+- Retries for failed connections (with config option)
+
 Changed:
 
 - Relicensed to MIT
+- Config file now has a few extra fields for the some the added features
 
 ## 2.0.1 (2021-08-13)
 

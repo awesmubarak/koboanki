@@ -61,17 +61,19 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     return new_wordlist
 
 
-def get_definitions(wordlist: list, language_list: list) -> tuple:
+def get_definitions(wordlist: list, config: dict) -> tuple:
     """Concurently find defintions for all words"""
     queue = Queue(maxsize=0)
-    num_theads = min(50, len(wordlist))
+    num_theads = min(config["dl_threads"], len(wordlist))
     definitions = [{} for _ in wordlist]
     for i in range(len(wordlist)):
-        queue.put((i, wordlist[i], language_list))
+        queue.put((i, wordlist[i]))
 
     # create threads
     for i in range(num_theads):
-        worker = threading.Thread(target=queue_handler, args=(queue, definitions))
+        worker = threading.Thread(
+            target=queue_handler, args=(queue, definitions, config)
+        )
         worker.setDaemon(True)
         worker.start()
     queue.join()
@@ -88,16 +90,17 @@ def get_definitions(wordlist: list, language_list: list) -> tuple:
     return (definition_dict, failed_words)
 
 
-def queue_handler(queue: Queue, definitions: list) -> bool:
+def queue_handler(queue: Queue, definitions: list, config: dict) -> bool:
     """Threads are created pointing at this function to get the word defintions"""
     while not queue.empty():
         work = queue.get()
         word = work[1]
-        language_list = work[2]
 
         definition = ""
-        for language in language_list:
-            definition = get_word_definition(word, language)
+        for language in config["language_list"]:
+            definition = get_word_definition(
+                word, language, config["dl_timeout"], config["dl_retries"]
+            )
             if definition != "":
                 break
 
@@ -106,13 +109,15 @@ def queue_handler(queue: Queue, definitions: list) -> bool:
     return True
 
 
-def get_word_definition(word: str, language: str) -> str:
+def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -> str:
     """Return the definition of a word that's passed to it. Empty if no defs."""
     response = []
     word_text = ""
     try:
-        response = requests.get(get_link(language, word)).json()
+        response = requests.get(get_link(lang, word), timeout=dl_timeout).json()
     except requests.exceptions.ConnectionError:
+        if n_retries:
+            word_text = get_word_definition(word, lang, dl_timeout, n_retries - 1)
         return word_text
 
     try:
@@ -164,17 +169,19 @@ def koboanki_menu_action() -> None:
 
     # get the config file and validate
     config = mw.addonManager.getConfig(__name__)
+
+    # TODO: improve the config file verification
     if not config:
         showInfo("Config file is empty")
         return
-    if not "languageList" in config:
+    if not "language_list" in config:
         showInfo("Config file does not contain a language list")
         return
-    if len(config["languageList"]) == 0:
+    if len(config["language_list"]) == 0:
         showInfo("Language list is empty")
         return
 
-    links = {code: get_link(code, "test") for code in config["languageList"]}
+    links = {code: get_link(code, "test") for code in config["language_list"]}
     links_statuses = {code: try_link(link) for code, link in links.items()}
     failed_codes = [code for code, status in links_statuses.items() if not status]
     if failed_codes:
@@ -194,7 +201,7 @@ def koboanki_menu_action() -> None:
 
     # find newwords, get definitions, add to collection
     new_wordlist = get_new_wordlist(wordlist)
-    word_defs, failed_words = get_definitions(new_wordlist, config["languageList"])
+    word_defs, failed_words = get_definitions(new_wordlist, config)
     add_to_collection(word_defs)
 
     # done
