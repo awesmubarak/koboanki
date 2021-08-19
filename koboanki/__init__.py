@@ -1,12 +1,12 @@
-from aqt import mw
-from aqt.utils import showInfo, qconnect
-import sqlite3
 import requests
-from os import path
-from PyQt5.QtWidgets import QFileDialog
+import sqlite3
 import threading
+from aqt import mw
+from aqt.qt import QAction
+from aqt.utils import showInfo, qconnect
+from os import path
 from queue import Queue
-
+from PyQt5.QtWidgets import QFileDialog
 
 def get_link(language_code:str, word:str) -> str:
     return f"https://api.dictionaryapi.dev/api/v2/entries/{language_code}/{word}"
