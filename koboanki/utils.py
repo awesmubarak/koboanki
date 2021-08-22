@@ -9,6 +9,7 @@ from queue import Queue
 import json
 from PyQt5.QtWidgets import QFileDialog
 
+
 def get_config() -> dict:
     config = mw.addonManager.getConfig(__name__)
 
@@ -31,6 +32,7 @@ def get_config() -> dict:
         return {}
 
     return config
+
 
 def verify_config(config) -> bool:
     # TODO
@@ -194,3 +196,40 @@ def add_to_collection(word_defs: dict) -> None:
 
     mw.col.save()
     return
+
+
+def get_words(config):
+    if not verify_config(config):
+        return
+
+    blacklist = get_blacklist()
+    if not blacklist:
+        showInfo("No valid blacklist found")
+        return
+
+    # get folder name
+    file_location = get_file_location()
+    if not file_location:
+        return
+
+    # read in the word list
+    wordlist = get_kobo_wordlist(file_location)
+    if not wordlist:
+        showInfo("No saved words found")
+        return
+
+    # check internet connection
+    if not try_link(get_link("en_US", "test")):
+        showInfo("Can't access server, faulty internet connection?")
+        return
+
+    # find newwords, get definitions, add to collection
+    new_wordlist = get_new_wordlist(wordlist)
+    not_blacklisted = [word for word in new_wordlist if word not in blacklist]
+    word_defs, failed_words = get_definitions(not_blacklisted, config)
+    add_to_collection(word_defs)
+
+    # done
+    added_dict = {w: True for w in word_defs.keys()}
+    failed_dict = {w: False for w in failed_words}
+    return {k:v for k in (added_dict, failed_dict) for k, v in k.items()}
