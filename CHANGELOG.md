@@ -7,11 +7,16 @@ Added:
 - Config field to specify number of download threads
 - Timeouts to requests (with config option)
 - Retries for failed connections (with config option)
+- A blacklist for words not to look up
 
 Changed:
 
 - Relicensed to MIT
 - Config file now has a few extra fields for the some the added features
+
+Fixed:
+
+- Wordlist now converted to lower case when pulled in from kobo
 
 ## 2.0.1 (2021-08-13)
 

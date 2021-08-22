@@ -6,7 +6,40 @@ from aqt.qt import QAction
 from aqt.utils import showInfo, qconnect
 from os import path
 from queue import Queue
+import json
 from PyQt5.QtWidgets import QFileDialog
+
+
+def get_config() -> dict:
+    config = mw.addonManager.getConfig(__name__)
+
+    # TODO: improve the config file verification
+    if not config:
+        showInfo("Config file is empty")
+        return {}
+    if not "language_list" in config:
+        showInfo("Config file does not contain a language list")
+        return {}
+    if len(config["language_list"]) == 0:
+        showInfo("Language list is empty")
+        return {}
+
+    links = {code: get_link(code, "test") for code in config["language_list"]}
+    links_statuses = {code: try_link(link) for code, link in links.items()}
+    failed_codes = [code for code, status in links_statuses.items() if not status]
+    if failed_codes:
+        showInfo(f"The following language codes are not valid: {failed_codes}")
+        return {}
+
+    return config
+
+
+def get_blacklist() -> list:
+    user_files_dir = path.join(mw.pm.addonFolder(), "koboanki", "user_files")
+    with open(path.join(user_files_dir, "blacklist.json")) as file:
+        blacklist = json.load(file)
+    lower_blacklist = [word.lower() for word in blacklist]
+    return lower_blacklist
 
 
 def get_link(language_code: str, word: str) -> str:
@@ -50,7 +83,8 @@ def get_kobo_wordlist(file_location: str) -> list:
     wordlist = [
         row[0] for row in cursor.execute("SELECT text from WordList").fetchall()
     ]
-    return wordlist
+    lower_wordlist = [word.lower() for word in wordlist]
+    return lower_wordlist
 
 
 def get_new_wordlist(kobo_wordlist: list) -> list:
@@ -162,30 +196,14 @@ def add_to_collection(word_defs: dict) -> None:
 def koboanki_menu_action() -> None:
     """Main function, binds to menu item"""
 
-    # check internet connection
-    if not try_link(get_link("en_US", "test")):
-        showInfo("Can't access server, faulty internet connection?")
-        return
-
     # get the config file and validate
-    config = mw.addonManager.getConfig(__name__)
-
-    # TODO: improve the config file verification
+    config = get_config()
     if not config:
-        showInfo("Config file is empty")
-        return
-    if not "language_list" in config:
-        showInfo("Config file does not contain a language list")
-        return
-    if len(config["language_list"]) == 0:
-        showInfo("Language list is empty")
         return
 
-    links = {code: get_link(code, "test") for code in config["language_list"]}
-    links_statuses = {code: try_link(link) for code, link in links.items()}
-    failed_codes = [code for code, status in links_statuses.items() if not status]
-    if failed_codes:
-        showInfo(f"The following language codes are not valid: {failed_codes}")
+    blacklist = get_blacklist()
+    if not blacklist:
+        showInfo("No valid blacklist found")
         return
 
     # get folder name
@@ -193,15 +211,21 @@ def koboanki_menu_action() -> None:
     if not file_location:
         return
 
-    # read in the file list
+    # read in the word list
     wordlist = get_kobo_wordlist(file_location)
     if not wordlist:
         showInfo("No saved words found")
         return
 
+    # check internet connection
+    if not try_link(get_link("en_US", "test")):
+        showInfo("Can't access server, faulty internet connection?")
+        return
+
     # find newwords, get definitions, add to collection
     new_wordlist = get_new_wordlist(wordlist)
-    word_defs, failed_words = get_definitions(new_wordlist, config)
+    not_blacklisted = [word for word in new_wordlist if word not in blacklist]
+    word_defs, failed_words = get_definitions(not_blacklisted, config)
     add_to_collection(word_defs)
 
     # done
