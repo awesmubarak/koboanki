@@ -100,7 +100,7 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     return new_wordlist
 
 
-def get_definitions(wordlist: list, config: dict) -> tuple:
+def get_definitions(wordlist: list, config: dict) -> dict:
     """Concurently find defintions for all words"""
     queue = Queue(maxsize=0)
     num_theads = min(config["dl_threads"], len(wordlist))
@@ -117,16 +117,8 @@ def get_definitions(wordlist: list, config: dict) -> tuple:
         worker.start()
     queue.join()
 
-    # seperate working and broken words
-    definition_dict = {}
-    failed_words = []
-    for word, definition in zip(wordlist, definitions):
-        if definition:
-            definition_dict[word] = definition
-        else:
-            failed_words.append(word)
+    return {word: definition for word, definition in zip(wordlist, definitions)}
 
-    return (definition_dict, failed_words)
 
 
 def queue_handler(queue: Queue, definitions: list, config: dict) -> bool:
@@ -188,7 +180,8 @@ def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -
 
 def add_to_collection(word_defs: dict) -> None:
     """Adds valid words to the collection"""
-    for word, definition in word_defs.items():
+    working_words = {w:d for (w, d) in word_defs.items() if d}
+    for word, definition in working_words.items():
         note = mw.col.newNote("Basic")
         note["Front"] = word
         note["Back"] = definition
@@ -226,10 +219,6 @@ def get_words(config):
     # find newwords, get definitions, add to collection
     new_wordlist = get_new_wordlist(wordlist)
     not_blacklisted = [word for word in new_wordlist if word not in blacklist]
-    word_defs, failed_words = get_definitions(not_blacklisted, config)
-    add_to_collection(word_defs)
+    word_defs = get_definitions(not_blacklisted, config)
 
-    # done
-    added_dict = {w: True for w in word_defs.keys()}
-    failed_dict = {w: False for w in failed_words}
-    return {k:v for k in (added_dict, failed_dict) for k, v in k.items()}
+    return word_defs

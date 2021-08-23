@@ -33,17 +33,25 @@ class PluginWindow(QDialog):
 class ImportManagerWindow(QDialog):
     def __init__(self, words: dict):
         QDialog.__init__(self, None)
+        self.words = words
+
         self.setWindowTitle("koboanki - import words")
         self.confirm_btn = QPushButton("Confirm")
         self.words_tbl = QTableWidget()
         self.confirm_btn.clicked.connect(self.confirm_input)
 
         self.words_tbl.setColumnCount(4)
-        self.words_tbl.setRowCount(len(words))
+        self.words_tbl.setRowCount(len(self.words))
         self.words_tbl.setHorizontalHeaderLabels(["Add", "Word", "Definition", "Blacklist"])
 
-        for w_n, (word, state) in enumerate(words.items()):
+        for w_n, (word, word_def) in enumerate(self.words.items()):
+            add_checkbox = "X" if word_def else " "
+            blacklist_checkbox = "X" if not word_def else " "
+            self.words_tbl.setItem(w_n, 4, QTableWidgetItem(add_checkbox))
             self.words_tbl.setItem(w_n, 1, QTableWidgetItem(word))
+            self.words_tbl.setItem(w_n, 2, QTableWidgetItem(word_def))
+            self.words_tbl.setItem(w_n, 3, QTableWidgetItem(blacklist_checkbox))
+
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.words_tbl)
@@ -51,7 +59,9 @@ class ImportManagerWindow(QDialog):
         self.setLayout(main_layout)
 
     def confirm_input(self):
-        pass
+        utils.add_to_collection(self.words)
+        exit()
+
 
 
 class ChangeCardFormat(QDialog):
