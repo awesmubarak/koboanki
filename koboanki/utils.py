@@ -185,6 +185,7 @@ def add_to_collection(word_defs: dict) -> None:
         note = mw.col.newNote("Basic")
         note["Front"] = word
         note["Back"] = definition
+        note.tags.append("koboanki")
         mw.col.addNote(note)
 
     mw.col.save()
