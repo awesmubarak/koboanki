@@ -223,3 +223,14 @@ def get_words(config):
     word_defs = get_definitions(not_blacklisted, config)
 
     return word_defs
+
+def get_deck_dict() -> dict:
+    deck_list = mw.col.decks.all_names_and_ids()
+    deck_dict = {}
+    for deck in deck_list:
+        split_deck = str(deck).split("\n")
+        id = split_deck[0].split(" ")[1]
+        name = split_deck[1].split('"')[1]
+        deck_dict[name] = id
+    return deck_dict
+

@@ -57,10 +57,13 @@ class ImportManagerWindow(QDialog):
 
         # deck chooser
         combo_box = QComboBox(self)
-        combo_box.addItem(":O")
-        combo_box.addItem(":D")
-        combo_box.addItem(":A")
-        combo_box.addItem(":(")
+
+        deck_dict = utils.get_deck_dict()
+        for (name, _) in deck_dict.items():
+            combo_box.addItem(name)
+
+        deck_id = deck_dict[combo_box.currentText()] # TODO
+        mw.col.decks.select(deck_id)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(words_tbl)
