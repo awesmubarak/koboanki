@@ -8,6 +8,7 @@ from os import path
 from queue import Queue
 import json
 from PyQt5.QtWidgets import QFileDialog
+from string import punctuation
 
 
 def get_config() -> dict:
@@ -34,17 +35,21 @@ def get_config() -> dict:
     return config
 
 
-def verify_config(config) -> bool:
+def verify_config(config: dict) -> bool:
     # TODO
     return True
+
+
+def normalise_word(word: str) -> str:
+    return (word[:-1] + word[-1].strip(punctuation)).lower()
 
 
 def get_blacklist() -> list:
     user_files_dir = path.join(mw.pm.addonFolder(), "koboanki", "user_files")
     with open(path.join(user_files_dir, "blacklist.json")) as file:
         blacklist = json.load(file)
-    lower_blacklist = [word.lower() for word in blacklist]
-    return lower_blacklist
+    normal_blacklist = [normalise_word(word) for word in blacklist]
+    return normal_blacklist
 
 
 def get_link(language_code: str, word: str) -> str:
@@ -88,8 +93,8 @@ def get_kobo_wordlist(file_location: str) -> list:
     wordlist = [
         row[0] for row in cursor.execute("SELECT text from WordList").fetchall()
     ]
-    lower_wordlist = [word.lower() for word in wordlist]
-    return lower_wordlist
+    normal_wordlist = [normalise_word(word) for word in wordlist]
+    return normal_wordlist
 
 
 def get_new_wordlist(kobo_wordlist: list) -> list:
@@ -118,7 +123,6 @@ def get_definitions(wordlist: list, config: dict) -> dict:
     queue.join()
 
     return {word: definition for word, definition in zip(wordlist, definitions)}
-
 
 
 def queue_handler(queue: Queue, definitions: list, config: dict) -> bool:
@@ -180,7 +184,7 @@ def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -
 
 def add_to_collection(word_defs: dict) -> None:
     """Adds valid words to the collection"""
-    working_words = {w:d for (w, d) in word_defs.items() if d}
+    working_words = {w: d for (w, d) in word_defs.items() if d}
     for word, definition in working_words.items():
         note = mw.col.newNote("Basic")
         note["Front"] = word
@@ -224,6 +228,7 @@ def get_words(config):
 
     return word_defs
 
+
 def get_deck_dict() -> dict:
     deck_list = mw.col.decks.all_names_and_ids()
     deck_dict = {}
@@ -233,4 +238,3 @@ def get_deck_dict() -> dict:
         name = split_deck[1].split('"')[1]
         deck_dict[name] = id
     return deck_dict
-
