@@ -1,6 +1,6 @@
 from aqt import mw
 from aqt.utils import showInfo
-from aqt.qt import *
+from aqt.qt import *  # type: ignore
 from . import utils
 
 
