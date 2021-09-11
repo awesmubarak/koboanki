@@ -88,7 +88,7 @@ def add_to_collection(word_defs: dict) -> None:
     """Adds valid words to the collection"""
     working_words = {w: d for (w, d) in word_defs.items() if d}
     for word, definition in working_words.items():
-        note = mw.col.newNote("Basic") #type: ignore
+        note = mw.col.newNote("Basic")  # type: ignore
         note["Front"] = word
         note["Back"] = definition
         note.tags.append("koboanki")
