@@ -1,5 +1,5 @@
 from aqt import mw
-from aqt.qt import QAction
+from aqt.qt import QAction, QProgressDialog, QPushButton
 from aqt.utils import qconnect
 
 from . import utils
@@ -13,11 +13,18 @@ def koboanki_menu_action() -> None:
     if not config:
         return
 
+    dlg = QProgressDialog()
+    dlg.setAutoClose(True)
+    btn = QPushButton("Cancel")
+    btn.setEnabled(False)
+    dlg.setCancelButton(btn)
+    dlg.show()
+    dlg.setValue(0)
     words = utils.get_words(config)
-    if not words:
-        return
+    dlg.setValue(100)
+    del dlg
 
-    window = gui.ImportManagerWindow(words)
+    window = gui.ImportManagerWindow(words)  # type: ignore
     setattr(mw, "koboannki - import words", window)
     window.exec_()
 
