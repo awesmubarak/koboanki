@@ -31,20 +31,19 @@ class ImportManagerWindow(QDialog):
             words_tbl.setItem(w_n, 3, QTableWidgetItem(blacklist_checkbox))
 
         # deck chooser
-        combo_box = QComboBox(self)
+        self.combo_box = QComboBox(self)
 
-        deck_dict = utils.get_deck_dict()
-        for (name, _) in deck_dict.items():
-            combo_box.addItem(name)
-
-        deck_id = deck_dict[combo_box.currentText()]  # TODO
-        mw.col.decks.select(deck_id)
+        self.deck_dict = utils.get_deck_dict()
+        for (name, _) in self.deck_dict.items():
+            self.combo_box.addItem(name)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(words_tbl)
         main_layout.addWidget(confirm_btn)
-        main_layout.addWidget(combo_box)
+        main_layout.addWidget(self.combo_box)
         self.setLayout(main_layout)
 
     def confirm_input(self):
-        utils.add_to_collection(self.words)
+        deck_id = self.deck_dict[self.combo_box.currentText()]  # TODO
+        utils.add_to_collection(self.words, int(deck_id))
+        self.close()

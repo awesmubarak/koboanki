@@ -84,7 +84,7 @@ def get_deck_dict() -> dict:
     return deck_dict
 
 
-def add_to_collection(word_defs: dict) -> None:
+def add_to_collection(word_defs: dict, deck_id: int) -> None:
     """Adds valid words to the collection"""
     working_words = {w: d for (w, d) in word_defs.items() if d}
     for word, definition in working_words.items():
@@ -92,7 +92,8 @@ def add_to_collection(word_defs: dict) -> None:
         note["Front"] = word
         note["Back"] = definition
         note.tags.append("koboanki")
-        mw.col.addNote(note)
+        # mw.col.addNote(note)
+        mw.col.add_note(note, deck_id)  # type: ignore
 
     mw.col.save()
     return
@@ -178,7 +179,7 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     anki_wordlist = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
     new_wordlist = [word for word in kobo_wordlist if word not in anki_wordlist]
     # new_wordlist = ["hi", "hello", "bye", "test", "double", "triple"]
-    new_wordlist = new_wordlist[:30] # TEMP
+    new_wordlist = new_wordlist[:3]  # TEMP
     return new_wordlist
 
 
@@ -227,7 +228,7 @@ def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -
     word_text = ""
     try:
         response = requests.get(get_link(lang, word), timeout=dl_timeout).json()
-    except requests.exceptions.ConnectionError: # TODO: test this
+    except requests.exceptions.ConnectionError:  # TODO: test this
         if n_retries > 1:
             word_text = get_word_definition(word, lang, dl_timeout, n_retries - 1)
         else:
