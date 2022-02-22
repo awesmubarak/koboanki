@@ -102,6 +102,25 @@ def add_to_collection(word_defs: dict, deck_id: int) -> None:
 ### Verification
 # TODO
 
+# See https://github.com/meetDeveloper/freeDictionaryAPI/blob/master/modules/utils.js
+SUPPORTED_LANGUAGES = (
+        'hi', 	 # Hindi
+        'en',    # English (US)
+        'en-uk', # English (UK)
+        'es', 	 # Spanish
+        'fr',	 # French
+        'ja',    # Japanese
+        'cs',    # Czech
+        'nl',    # Dutch
+        'sk',    # Slovak
+        'ru',	 # Russian
+        'de', 	 # German
+        'it', 	 # Italian
+        'ko',	 # Korean
+        'pt-BR', # Brazilian Portuguese
+        'ar',    # Arabic
+        'tr'     # Turkish
+)
 
 def verify_config(config: dict) -> bool:
     if not config:
@@ -114,9 +133,7 @@ def verify_config(config: dict) -> bool:
         showInfo("Language list is empty")
         return False
 
-    links = {code: get_link(code, "test") for code in config["language_list"]}
-    links_statuses = {code: try_link(link) for code, link in links.items()}
-    failed_codes = [code for code, status in links_statuses.items() if not status]
+    failed_codes = [code for code in config["language_list"] if code not in SUPPORTED_LANGUAGES]
     if failed_codes:
         showInfo(f"The following language codes are not valid: {failed_codes}")
         return False
@@ -148,7 +165,7 @@ def get_words(config):
         return
 
     # check internet connection
-    if not try_link(get_link("en_US", "test")):
+    if not try_link(get_link("en", "test")):
         showInfo("Can't access server, faulty internet connection?")
         return
 

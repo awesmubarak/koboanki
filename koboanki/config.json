@@ -3,7 +3,7 @@
     "dl_threads": 50,
     "dl_timeout": 2,
     "language_list": [
-        "en_GB",
-        "en_US"
+        "en-uk",
+        "en"
     ]
 }
