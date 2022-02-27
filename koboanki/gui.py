@@ -17,7 +17,7 @@ class ImportManagerWindow(QDialog):
 
         # words table
         words_tbl.setColumnCount(4)
-        words_tbl.setRowCount(len(self.words))
+        words_tbl.setRowCount(max(1, len(self.words)))
         words_tbl.setHorizontalHeaderLabels(["Add", "Word", "Definition", "Blacklist"])
 
         for w_n, (word, word_def) in enumerate(self.words.items()):

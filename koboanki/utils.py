@@ -10,7 +10,6 @@ import json
 from PyQt5.QtWidgets import QFileDialog
 from string import punctuation
 
-
 ### IO
 
 
@@ -137,15 +136,17 @@ def get_words(config):
         return
 
     # get folder name
-    file_location = get_file_location()
-    if not file_location:
-        return
-
-    # read in the word list
-    wordlist = get_kobo_wordlist(file_location)
-    if not wordlist:
-        showInfo("No saved words found")
-        return
+    # TODO: this is temporary, gets rid of file opener and replaces it with list of pre-determined words. Doesn't need kobo plugged in.
+    # file_location = get_file_location()
+    # if not file_location:
+    #     return
+    #
+    # # read in the word list
+    # wordlist = get_kobo_wordlist(file_location)
+    # if not wordlist:
+    #     showInfo("No saved words found")
+    #     return
+    wordlist = ["Test", "thistle", "guitarrrrrrrrr", "grün", "درخت"]
 
     # check internet connection
     if not try_link(get_link("en_US", "test")):
@@ -157,6 +158,7 @@ def get_words(config):
     not_blacklisted = [word for word in new_wordlist if word not in blacklist]
     word_defs = get_definitions(not_blacklisted, config)
 
+    word_defs = {"word": "yes"}
     return word_defs
 
 
@@ -175,88 +177,75 @@ def get_link(language_code: str, word: str) -> str:
 
 def get_new_wordlist(kobo_wordlist: list) -> list:
     """Returns a list of only words not already added to anki."""
-    ids = mw.col.find_notes("")
-    anki_wordlist = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
-    new_wordlist = [word for word in kobo_wordlist if word not in anki_wordlist]
-    # new_wordlist = ["hi", "hello", "bye", "test", "double", "triple"]
-    new_wordlist = new_wordlist[:3]  # TEMP
-    return new_wordlist
+    # TODO: this should look in the current deck. commenting out for now.
+    # ids = mw.col.find_notes("")
+    # anki_wordlist = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
+    # new_wordlist = [word for word in kobo_wordlist if word not in anki_wordlist]
+    # # new_wordlist = ["hi", "hello", "bye", "test", "double", "triple"]
+    # return new_wordlist
+    return kobo_wordlist
 
 
 def get_definitions(wordlist: list, config: dict) -> dict:
     """Concurently find defintions for all words"""
-    queue = Queue(maxsize=0)
-    num_theads = min(config["dl_threads"], len(wordlist))
-    definitions = [{} for _ in wordlist]
-    for i in range(len(wordlist)):
-        queue.put((i, wordlist[i]))
-
-    # create threads
-    for i in range(num_theads):
-        worker = threading.Thread(
-            target=queue_handler, args=(queue, definitions, config)
-        )
-        worker.setDaemon(True)
-        worker.start()
-    queue.join()
-
-    return {word: definition for word, definition in zip(wordlist, definitions)}
-
-
-def queue_handler(queue: Queue, definitions: list, config: dict) -> bool:
-    """Threads are created pointing at this function to get the word defintions"""
-    while not queue.empty():
-        work = queue.get()
-        word = work[1]
-
-        definition = ""
-        for language in config["language_list"]:
-            definition = get_word_definition(
-                word, language, config["dl_timeout"], config["dl_retries"]
-            )
-            if definition != "":
-                break
-
-        definitions[work[0]] = definition
-        queue.task_done()
-    return True
+    # queue = Queue(maxsize=0)
+    # num_theads = min(config["dl_threads"], len(wordlist))
+    # definitions = [{} for _ in wordlist]
+    # for i in range(len(wordlist)):
+    #     queue.put((i, wordlist[i]))
+    #
+    # # create threads
+    # for i in range(num_theads):
+    #     worker = threading.Thread(
+    #         target=queue_handler, args=(queue, definitions, config)
+    #     )
+    #     worker.setDaemon(True)
+    #     worker.start()
+    # queue.join()
+    #
+    # return {word: definition for word, definition in zip(wordlist, definitions)}
+    def_dict = {}
+    for word in wordlist:
+        def_dict[word] = get_word_definition(word, "en")
 
 
-def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -> str:
+# def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -> str:
+def get_word_definition(word: str, lang: str) -> str:
     """Return the definition of a word that's passed to it. Empty if no defs."""
-    response = []
-    word_text = ""
-    try:
-        response = requests.get(get_link(lang, word), timeout=dl_timeout).json()
-    except requests.exceptions.ConnectionError:  # TODO: test this
-        if n_retries > 1:
-            word_text = get_word_definition(word, lang, dl_timeout, n_retries - 1)
-        else:
-            response = ""
-        return word_text
+    # response = []
+    # word_text = ""
+    # try:
+    #     response = requests.get(get_link(lang, word), timeout=dl_timeout).json()
+    # except requests.exceptions.ConnectionError:  # TODO: test this
+    #     if n_retries > 1:
+    #         word_text = get_word_definition(word, lang, dl_timeout, n_retries - 1)
+    #     else:
+    #         response = ""
+    #     return word_text
+    #
+    # try:
+    #     for word_def in response:
+    #         word_text = ""
+    #         definition = ""
+    #
+    #         phonetics = word_def["phonetics"]
+    #         meanings = word_def["meanings"]
+    #
+    #         phonetics = [phoenetic["text"] for phoenetic in phonetics]
+    #         word_text = f"<small>{str(phonetics)}</small>"
+    #
+    #         for meaning_n, meaning in enumerate(meanings):
+    #             part_of_speech = meaning["partOfSpeech"]
+    #             definition = meaning["definitions"][0]["definition"]
+    #             example = meaning["definitions"][0]["example"]
+    #
+    #             word_text += f"<br><b>{meaning_n+1}. </b> <small>{part_of_speech} - </small>{definition} <i> {example} </i>"
+    #
+    #         # sometimes there's pronounciation info but not definition
+    #         if definition == "":
+    #             word_text = ""
+    #
+    # except:
+    #     word_text = ""
 
-    try:
-        for word_def in response:
-            word_text = ""
-            definition = ""
-
-            phonetics = word_def["phonetics"]
-            meanings = word_def["meanings"]
-
-            phonetics = [phoenetic["text"] for phoenetic in phonetics]
-            word_text = f"<small>{str(phonetics)}</small>"
-
-            for meaning_n, meaning in enumerate(meanings):
-                part_of_speech = meaning["partOfSpeech"]
-                definition = meaning["definitions"][0]["definition"]
-                example = meaning["definitions"][0]["example"]
-
-                word_text += f"<br><b>{meaning_n+1}. </b> <small>{part_of_speech} - </small>{definition} <i> {example} </i>"
-
-            # sometimes there's pronounciation info but not definition
-            if definition == "":
-                word_text = ""
-
-    except:
-        word_text = ""
-    return word_text
+    return "yes"
