@@ -20,12 +20,12 @@ def koboanki_menu_action() -> None:
     dlg.setCancelButton(btn)
     dlg.show()
     dlg.setValue(0)
-    words = utils.get_words(config)
+    words = utils.get_words()
     dlg.setValue(100)
     del dlg
 
-    window = gui.ImportManagerWindow(words)  # type: ignore
-    setattr(mw, "koboannki - import words", window)
+    window = gui.DeckChooserWindow(words)  # type: ignore
+    setattr(mw, "koboanki - choose deck to add to", window)
     window.exec_()
 
 

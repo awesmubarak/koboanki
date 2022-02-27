@@ -125,10 +125,8 @@ def verify_config(config: dict) -> bool:
 ### Interfaces
 
 
-def get_words(config):
+def get_words():
     """Calls all functions. Gets words."""
-    if not verify_config(config):
-        return
 
     blacklist = get_blacklist()
     if not blacklist:
@@ -156,7 +154,7 @@ def get_words(config):
     # find newwords, get definitions, add to collection
     new_wordlist = get_new_wordlist(wordlist)
     not_blacklisted = [word for word in new_wordlist if word not in blacklist]
-    word_defs = get_definitions(not_blacklisted, config)
+    word_defs = get_definitions(not_blacklisted)
 
     word_defs = {"word": "yes"}
     return word_defs
@@ -186,7 +184,7 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     return kobo_wordlist
 
 
-def get_definitions(wordlist: list, config: dict) -> dict:
+def get_definitions(wordlist: list) -> dict:
     """Concurently find defintions for all words"""
     # queue = Queue(maxsize=0)
     # num_theads = min(config["dl_threads"], len(wordlist))
