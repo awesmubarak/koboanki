@@ -48,19 +48,24 @@ class ImportManagerWindow(QDialog):
         confirm_btn.clicked.connect(self.confirm_input)
 
         # words table
-        words_tbl.setColumnCount(4)
-        words_tbl.setRowCount(max(1, len(self.words)))
-        words_tbl.setHorizontalHeaderLabels(["Add", "Word", "Definition", "Blacklist"])
+        n_rows = max(1, len(self.words))
+        words_tbl.setColumnCount(5)
+        words_tbl.setRowCount(n_rows)
+        words_tbl.setHorizontalHeaderLabels(["A", "I", "B", "Word", "Definition"])
 
+        # word definitions
         for w_n, (word, word_def) in enumerate(self.words.items()):
-            add_checkbox = "X" if word_def else " "
-            blacklist_checkbox = "X" if not word_def else " "
-            words_tbl.setItem(w_n, 0, QTableWidgetItem(add_checkbox))
-            words_tbl.setItem(w_n, 1, QTableWidgetItem(word))
-            words_tbl.setItem(
-                w_n, 2, QTableWidgetItem(word_def)
-            )  # TODO: shows HTML not just def :O
-            words_tbl.setItem(w_n, 3, QTableWidgetItem(blacklist_checkbox))
+            words_tbl.setItem(w_n, 3, QTableWidgetItem(word))
+            words_tbl.setItem(w_n, 4, QTableWidgetItem(word_def))
+
+        # add or don't add checkboxes
+        for y in range(3):
+            button_group = QButtonGroup(self)
+            button_group.setExclusive(True)
+            for x in range(n_rows):
+                checkbox = QRadioButton()
+                button_group.addButton(checkbox)
+                words_tbl.setCellWidget(y, x, checkbox)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(words_tbl)

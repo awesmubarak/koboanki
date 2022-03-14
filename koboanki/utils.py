@@ -147,16 +147,15 @@ def get_words():
     wordlist = ["Test", "thistle", "guitarrrrrrrrr", "grün", "درخت"]
 
     # check internet connection
-    if not try_link(get_link("en_US", "test")):
-        showInfo("Can't access server, faulty internet connection?")
-        return
+    # if not try_link(get_link("en_US", "test")):
+    #     showInfo("Can't access server, faulty internet connection?")
+    #     return
 
     # find newwords, get definitions, add to collection
-    new_wordlist = get_new_wordlist(wordlist)
-    not_blacklisted = [word for word in new_wordlist if word not in blacklist]
-    word_defs = get_definitions(not_blacklisted)
+    # new_wordlist = get_new_wordlist(wordlist)
+    # not_blacklisted = [word for word in new_wordlist if word not in blacklist]
+    word_defs = get_definitions(wordlist, "en")
 
-    word_defs = {"word": "yes"}
     return word_defs
 
 
@@ -184,7 +183,7 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     return kobo_wordlist
 
 
-def get_definitions(wordlist: list) -> dict:
+def get_definitions(wordlist: list, lang: str) -> dict:
     """Concurently find defintions for all words"""
     # queue = Queue(maxsize=0)
     # num_theads = min(config["dl_threads"], len(wordlist))
@@ -205,6 +204,8 @@ def get_definitions(wordlist: list) -> dict:
     def_dict = {}
     for word in wordlist:
         def_dict[word] = get_word_definition(word, "en")
+
+    return def_dict
 
 
 # def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -> str:
