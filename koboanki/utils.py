@@ -101,29 +101,17 @@ def get_words():
         return
 
     # get folder name
-    # TODO: this is temporary, gets rid of file opener and replaces it with list of pre-determined words. Doesn't need kobo plugged in.
     # file_location = get_file_location()
     # if not file_location:
     #     return
-    #
-    # # read in the word list
-    # wordlist = get_kobo_wordlist(file_location)
-    # if not wordlist:
-    #     showInfo("No saved words found")
-    #     return
-    wordlist = ["Test", "thistle", "guitarrrrrrrrr", "grün", "درخت"]
 
-    # check internet connection
-    # if not try_link(get_link("en_US", "test")):
-    #     showInfo("Can't access server, faulty internet connection?")
-    #     return
+    wordlist = ["Test", "thistle", "guitarrrrrrrrr", "grün", "درخت"]
 
     # find newwords, get definitions, add to collection
     # new_wordlist = get_new_wordlist(wordlist)
     # not_blacklisted = [word for word in new_wordlist if word not in blacklist]
-    word_defs = get_definitions(wordlist, "en")
 
-    return word_defs
+    return wordlist
 
 
 ### Acctual utils
@@ -134,7 +122,7 @@ def normalise_word(word: str) -> str:
     return (word[:-1] + word[-1].strip(punctuation)).lower()
 
 
-def get_link(language_code: str, word: str) -> str:
+def get_link(word: str) -> str:
     """Creates a dictionary link from a language code and word."""
     return f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
@@ -145,7 +133,6 @@ def get_new_wordlist(kobo_wordlist: list) -> list:
     # ids = mw.col.find_notes("")
     # anki_wordlist = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
     # new_wordlist = [word for word in kobo_wordlist if word not in anki_wordlist]
-    # # new_wordlist = ["hi", "hello", "bye", "test", "double", "triple"]
     # return new_wordlist
     return kobo_wordlist
 
@@ -176,16 +163,52 @@ def get_definitions(wordlist: list, lang: str) -> dict:
 
 
 # def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -> str:
-def get_word_definition(word: str, lang: str) -> str:
+# def get_word_definition(word: str, lang: str) -> str:
+#     """Return the definition of a word that's passed to it. Empty if no defs."""
+#     response = []
+#     word_text = ""
+#     try:
+#         response = requests.get(get_link(word)).json()
+#     except requests.exceptions.ConnectionError:  # TODO: raise errors in a clean way
+#         response = "ERROR: no response"
+#
+#     word_text = str(response)[0]["meanings"] #TODO:
+#
+#     return word_text
+def get_word_definition(word: str, language: str) -> str:
     """Return the definition of a word that's passed to it. Empty if no defs."""
     response = []
     word_text = ""
     try:
-        response = requests.get(get_link(lang, word)).json()
-    except requests.exceptions.ConnectionError:  # TODO: raise errors in a clean way
-        response = "ERROR: no response"
+        response = requests.get(get_link(word)).json()
+    except requests.exceptions.ConnectionError:
+        return word_text
 
-    word_text = str(response)[:20]
+    try:
+        for word_def in response:
+            word_text = ""
+            definition = ""
 
+            phonetics = word_def["phonetics"]
+            meanings = word_def["meanings"]
+
+            phonetics = [phoenetic["text"] for phoenetic in phonetics]
+            word_text = f"<small>{str(phonetics)}</small>"
+
+            for meaning_n, meaning in enumerate(meanings):
+                part_of_speech = meaning["partOfSpeech"]
+                definition = meaning["definitions"][0]["definition"]
+                example = meaning["definitions"][0]["example"]
+
+                word_text += f"<br><b>{meaning_n+1}. </b> <small>{part_of_speech} - </small>{definition} <i> {example} </i>"
+
+            # sometimes there's pronounciation info but not definition
+            if definition == "":
+                word_text = ""
+
+    except:
+        word_text = ""
+
+    showInfo(word)
+    showInfo(word_text)
     return word_text
-
