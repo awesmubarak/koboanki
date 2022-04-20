@@ -28,19 +28,6 @@ def get_blacklist() -> list:
     return normal_blacklist
 
 
-def try_link(link) -> bool:
-    """Verifies if a link is valid. Unvalid links don't connect or 404."""
-    valid = True
-    try:
-        response = requests.get(link)
-        if response.status_code == 404:
-            valid = False
-    except requests.exceptions.ConnectionError:
-        valid = False
-
-    return valid
-
-
 def get_file_location() -> str:
     """Returns the kobo db file location. Empty if error or not found."""
     folder_name = QFileDialog.getExistingDirectory(
@@ -102,26 +89,6 @@ def add_to_collection(word_defs: dict, deck_id: int) -> None:
 # TODO
 
 
-def verify_config(config: dict) -> bool:
-    if not config:
-        showInfo("Config file is empty")
-        return False
-    if not "language_list" in config:
-        showInfo("Config file does not contain a language list")
-        return False
-    if len(config["language_list"]) == 0:
-        showInfo("Language list is empty")
-        return False
-
-    links = {code: get_link(code, "test") for code in config["language_list"]}
-    links_statuses = {code: try_link(link) for code, link in links.items()}
-    failed_codes = [code for code, status in links_statuses.items() if not status]
-    if failed_codes:
-        showInfo(f"The following language codes are not valid: {failed_codes}")
-        return False
-    return True
-
-
 ### Interfaces
 
 
@@ -169,7 +136,7 @@ def normalise_word(word: str) -> str:
 
 def get_link(language_code: str, word: str) -> str:
     """Creates a dictionary link from a language code and word."""
-    return f"https://api.dictionaryapi.dev/api/v2/entries/{language_code}/{word}"
+    return f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
 
 def get_new_wordlist(kobo_wordlist: list) -> list:
@@ -211,40 +178,14 @@ def get_definitions(wordlist: list, lang: str) -> dict:
 # def get_word_definition(word: str, lang: str, dl_timeout: int, n_retries: int) -> str:
 def get_word_definition(word: str, lang: str) -> str:
     """Return the definition of a word that's passed to it. Empty if no defs."""
-    # response = []
-    # word_text = ""
-    # try:
-    #     response = requests.get(get_link(lang, word), timeout=dl_timeout).json()
-    # except requests.exceptions.ConnectionError:  # TODO: test this
-    #     if n_retries > 1:
-    #         word_text = get_word_definition(word, lang, dl_timeout, n_retries - 1)
-    #     else:
-    #         response = ""
-    #     return word_text
-    #
-    # try:
-    #     for word_def in response:
-    #         word_text = ""
-    #         definition = ""
-    #
-    #         phonetics = word_def["phonetics"]
-    #         meanings = word_def["meanings"]
-    #
-    #         phonetics = [phoenetic["text"] for phoenetic in phonetics]
-    #         word_text = f"<small>{str(phonetics)}</small>"
-    #
-    #         for meaning_n, meaning in enumerate(meanings):
-    #             part_of_speech = meaning["partOfSpeech"]
-    #             definition = meaning["definitions"][0]["definition"]
-    #             example = meaning["definitions"][0]["example"]
-    #
-    #             word_text += f"<br><b>{meaning_n+1}. </b> <small>{part_of_speech} - </small>{definition} <i> {example} </i>"
-    #
-    #         # sometimes there's pronounciation info but not definition
-    #         if definition == "":
-    #             word_text = ""
-    #
-    # except:
-    #     word_text = ""
+    response = []
+    word_text = ""
+    try:
+        response = requests.get(get_link(lang, word)).json()
+    except requests.exceptions.ConnectionError:  # TODO: raise errors in a clean way
+        response = "ERROR: no response"
 
-    return "yes"
+    word_text = str(response)[:20]
+
+    return word_text
+
