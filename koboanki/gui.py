@@ -44,7 +44,7 @@ class DeckChooserWindow(QDialog):
 
 
     def confirm_input(self):
-        self.deck_id = self.deck_dict[self.combo_box.currentText()]  # TODO: ?
+        self.deck_id = int(self.deck_dict[self.combo_box.currentText()])
         self.close()
 
         # opens the import manager, hides self, and closes

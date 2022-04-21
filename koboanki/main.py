@@ -20,9 +20,11 @@ def koboanki_menu_action() -> None:
     deck_id = deck_window.get_deck_id()
 
     # get word list from kobo
-    kobo_words_list = utils.get_words()
+    # kobo_wordslist = utils.get_kobo_wordlist(utils.get_file_location())
+    kobo_wordlist = ["hi", "byw"]
 
     # filter word list for words not already in deck
+    filtered_wordlist = utils.filter_wordlist(kobo_wordlist, deck_id)
 
     # get definitions
 

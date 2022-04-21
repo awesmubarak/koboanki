@@ -19,15 +19,6 @@ def get_config() -> dict:
     return config
 
 
-def get_blacklist() -> list:
-    """Opens and normalises the blacklist. TODO: create blacklist if there isn't one."""
-    user_files_dir = path.join(mw.pm.addonFolder(), "koboanki", "user_files")
-    with open(path.join(user_files_dir, "blacklist.json")) as file:
-        blacklist = json.load(file)
-    normal_blacklist = [normalise_word(word) for word in blacklist]
-    return normal_blacklist
-
-
 def get_file_location() -> str:
     """Returns the kobo db file location. Empty if error or not found."""
     folder_name = QFileDialog.getExistingDirectory(
@@ -85,35 +76,6 @@ def add_to_collection(word_defs: dict, deck_id: int) -> None:
     return
 
 
-### Verification
-# TODO
-
-
-### Interfaces
-
-
-def get_words():
-    """Calls all functions. Gets words."""
-
-    blacklist = get_blacklist()
-    if not blacklist:
-        showInfo("No valid blacklist found")
-        return
-
-    # get folder name
-    # file_location = get_file_location()
-    # if not file_location:
-    #     return
-
-    wordlist = ["Test", "thistle", "guitarrrrrrrrr", "grün", "درخت"]
-
-    # find newwords, get definitions, add to collection
-    # new_wordlist = get_new_wordlist(wordlist)
-    # not_blacklisted = [word for word in new_wordlist if word not in blacklist]
-
-    return wordlist
-
-
 ### Acctual utils
 
 
@@ -127,14 +89,17 @@ def get_link(word: str) -> str:
     return f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
 
-def get_new_wordlist(kobo_wordlist: list) -> list:
+def filter_wordlist(kobo_wordlist: list, deck_id: int) -> list:
     """Returns a list of only words not already added to anki."""
-    # TODO: this should look in the current deck. commenting out for now.
-    # ids = mw.col.find_notes("")
-    # anki_wordlist = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
-    # new_wordlist = [word for word in kobo_wordlist if word not in anki_wordlist]
-    # return new_wordlist
-    return kobo_wordlist
+    # TODO: return the duplicate items to show user at the end, alongside missing definitions
+
+    deck_name = mw.col.decks.name_if_exists(deck_id)
+    ids = mw.col.find_notes(f"deck:{deck_name}")
+
+    anki_wordlist = [mw.col.getNote(id_).items()[0][1] for id_ in ids]
+    new_wordlist = [word for word in kobo_wordlist if word not in anki_wordlist]
+
+    return new_wordlist
 
 
 def get_definitions(wordlist: list, lang: str) -> dict:
