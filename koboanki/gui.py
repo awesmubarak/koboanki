@@ -5,22 +5,6 @@ from . import utils
 
 
 class DeckChooserWindow(QDialog):
-    """Calls other windows and manages flowself."""
-
-    def __init__(self):
-        self.hide()
-
-        window = DeckChooserWindow(self.words, deck_id)  # type: ignore
-        setattr(mw, "koboannki - deck chooser", window)
-        window.exec_()
-
-        window = ImportManagerWindow(self.words, deck_id)  # type: ignore
-        setattr(mw, "koboannki - import words", window)
-        window.exec_()
-
-        self.close()
-
-class DeckChooserWindow(QDialog):
     def __init__(self):
 
         QDialog.__init__(self, None)
@@ -47,32 +31,25 @@ class DeckChooserWindow(QDialog):
         self.deck_id = int(self.deck_dict[self.combo_box.currentText()])
         self.close()
 
-        # opens the import manager, hides self, and closes
-        # window = ImportManagerWindow(self.words, deck_id)  # type: ignore
-        # setattr(mw, "koboannki - import words", window)
-        # self.hide()
-        # window.exec_()
-        # self.close()
-
     def get_deck_id(self):
         return self.deck_id
 
 
 class ImportManagerWindow(QDialog):
-    def __init__(self, words: dict, deck_id):
+    def __init__(self, words: dict):
         QDialog.__init__(self, None)
         self.setGeometry(300, 100, 500, 500)
         self.words = words
-        self.deck_id = deck_id
+        self.accept = False # TODO: is there a built in way to do this?
 
         self.setWindowTitle("koboanki - import words")
-        confirm_btn = QPushButton("Confirm")
+        confirm_btn = QPushButton("Add to collection")
         words_tbl = QTableWidget()
         confirm_btn.clicked.connect(self.confirm_input)
 
         # words table
         n_rows = max(1, len(self.words))
-        words_tbl.setColumnCount(3)
+        words_tbl.setColumnCount(2)
         words_tbl.setRowCount(n_rows)
         words_tbl.setHorizontalHeaderLabels(["Word", "Definition"])
 
@@ -87,6 +64,8 @@ class ImportManagerWindow(QDialog):
         self.setLayout(main_layout)
 
     def confirm_input(self):
-        # deck_id = self.deck_dict[self.combo_box.currentText()]  # TODO: not needed, right?
-        utils.add_to_collection(self.words, int(self.deck_id))
+        self.accept = True
         self.close()
+
+    def get_import_status(self):
+        return self.accept
