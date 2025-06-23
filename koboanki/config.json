@@ -1,0 +1,5 @@
+{
+    "front_template": "{{Word}}",
+    "back_template": "{{Definition}}<br><br>Language: {{Language}}",
+    "css": ".card {\n    font-family: arial;\n    font-size: 20px;\n    text-align: center;\n    color: black;\n    background-color: white;\n}\n\n.word {\n    font-size: 24px;\n    font-weight: bold;\n    margin-bottom: 10px;\n}\n\n.definition {\n    font-size: 18px;\n    line-height: 1.4;\n}\n\n.language {\n    font-size: 14px;\n    color: #666;\n    font-style: italic;\n}"
+} 

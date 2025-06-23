@@ -14,9 +14,39 @@ from aqt.utils import showInfo  # type: ignore
 from .core import fetch_definition, find_kobo_db, get_kobo_wordlist
 
 
+def get_config():
+    """Get the addon configuration from Anki's config system."""
+    return mw.addonManager.getConfig(__name__)
+
+
+def get_card_templates():
+    """Get the configured card templates for creating Anki cards.
+    
+    Returns:
+        dict: Dictionary containing front_template, back_template, and css
+    """
+    config = get_config()
+    if not config:
+        # Fallback defaults if config is not available
+        return {
+            "front_template": "{{Word}}",
+            "back_template": "{{Definition}}<br><br>Language: {{Language}}",
+            "css": ".card { font-family: arial; font-size: 20px; text-align: center; }"
+        }
+    
+    return {
+        "front_template": config.get("front_template", "{{Word}}"),
+        "back_template": config.get("back_template", "{{Definition}}<br><br>Language: {{Language}}"),
+        "css": config.get("css", ".card { font-family: arial; font-size: 20px; text-align: center; }")
+    }
+
+
 def _run_import() -> None:
     """Callback for the menu action – fetch list, show popup."""
-
+    
+    # Get user configuration for templates
+    config = get_config()
+    
     db_location = find_kobo_db()
     if not db_location:
         showInfo("Could not locate KOBO database under /Volumes.")

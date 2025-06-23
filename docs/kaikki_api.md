@@ -10,6 +10,8 @@ https://kaikki.org/dictionary/{Language}/meaning/{first_letter}/{first_two_lette
 
 **Example**: `https://kaikki.org/dictionary/English/meaning/a/ap/apple.jsonl`
 
+An extended example can be found in [kaikki_example_ant.jsonl](kaikki_example_ant.jsonl)
+
 ## Supported Languages
 
 | Code | Language | Kaikki Name |
