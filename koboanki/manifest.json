@@ -1,0 +1,8 @@
+{
+    "name": "koboanki_dev",
+    "package": "koboanki_dev",
+    "author": "Awes Mubarak",
+    "version": "__VERSION__",
+    "conflicts": [],
+    "mod": 0
+}
