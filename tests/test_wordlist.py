@@ -1,32 +1,44 @@
 import pathlib
 
-from koboanki import get_kobo_wordlist, normalise_word
+from koboanki.core import get_kobo_wordlist, normalise_word
 
 
-def test_get_kobo_wordlist_reads_all_words():
-    """The helper should return *all* words present in the test fixture DB
-    and normalise them to lowercase NFC.
+def test_get_kobo_wordlist_returns_word_and_lang_tuples():
+    """Verify the helper reads all words and their language codes.
+
+    - Words should be normalised (lowercase, NFC).
+    - Language codes should be stripped of the leading dash (e.g., '-en' -> 'en').
     """
-
     db_path = pathlib.Path(__file__).parent / "data" / "TestKoboReader.sqlite"
-    words = get_kobo_wordlist(str(db_path))
+    results = get_kobo_wordlist(str(db_path))
 
+    # Convert list of tuples to a dict for easier assertion
+    result_map = dict(results)
+
+    assert len(result_map) == 10
+    assert result_map["apple"] == "en"
+    assert result_map["zargle"] == "en"
+    assert result_map["apfel"] == "de"
+    assert result_map["philosophie"] == "de"
+    assert result_map["blurfisch"] == "de"
+
+    # Check the whole set to be sure
     expected = {
-        "apple",
-        "philosophy",
-        "banana",
-        "zargle",
-        "blurf",
-        "apfel",
-        "philosophie",
-        "banane",
-        "zargeln",
-        "blurfisch",
+        ("apple", "en"),
+        ("philosophy", "en"),
+        ("banana", "en"),
+        ("zargle", "en"),
+        ("blurf", "en"),
+        ("apfel", "de"),
+        ("philosophie", "de"),
+        ("banane", "de"),
+        ("zargeln", "de"),
+        ("blurfisch", "de"),
     }
-
-    assert set(words) == expected
-    assert len(words) == 10
+    assert set(results) == expected
 
 
 def test_normalise_word_nfc_lower():
-    assert normalise_word("Äpfel") == "äpfel"  # sanity check NFC + lowercase 
+    """Sanity-check the normalisation function."""
+    assert normalise_word("Äpfel") == "äpfel"
+    assert normalise_word("CAFÉ") == "café" 
