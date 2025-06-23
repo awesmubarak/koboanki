@@ -172,7 +172,7 @@ dependencies = [
     { name = "anki" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "mypy" },
     { name = "pytest" },
@@ -181,12 +181,14 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "anki", specifier = ">=23.10.1" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.4" },
-    { name = "types-requests", marker = "extra == 'dev'" },
+requires-dist = [{ name = "anki", specifier = ">=23.10.1" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.8" },
+    { name = "pytest", specifier = ">=7.4" },
+    { name = "ruff", specifier = ">=0.4.4" },
+    { name = "types-requests" },
 ]
 
 [[package]]
