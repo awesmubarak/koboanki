@@ -103,36 +103,19 @@ def _run_import() -> None:
         project_root = os.path.dirname(addon_module_dir)
         test_db_path = os.path.join(project_root, "tests", "data", "TestKoboReader.sqlite")
         
-        # Debug info
-        debug_info = f"""Debug info:
-• Addon module dir: {addon_module_dir}
-• Project root: {project_root}
-• Test DB path: {test_db_path}
-• Test DB exists: {os.path.exists(test_db_path)}
-• Test DB is file: {os.path.isfile(test_db_path)}
-• Current working dir: {os.getcwd()}"""
-        
         if os.path.isfile(test_db_path):
             db_path = test_db_path
-            showInfo(f"Using test database for development.\n\n{debug_info}")
+            # Only show debug info if there are issues
+            # showInfo(f"Using test database for development: {test_db_path}")
         else:
-            showInfo(f"No Kobo device found and test database not available.\n\n{debug_info}")
+            showInfo("No Kobo device found. Please connect your Kobo eReader.")
             return
 
     # Fetch the word list from Kobo
     try:
         words = get_kobo_wordlist(db_path)
     except Exception as e:
-        error_msg = f"""Error reading Kobo database: {str(e)}
-
-Database details:
-• Path: {db_path}
-• Exists: {os.path.exists(db_path) if db_path else 'No path'}
-• Is file: {os.path.isfile(db_path) if db_path else 'No path'}
-• Current working dir: {os.getcwd()}
-
-Exception type: {type(e).__name__}"""
-        showInfo(error_msg)
+        showInfo(f"Error reading Kobo database: {str(e)}")
         return
 
     if not words:
@@ -153,6 +136,8 @@ Exception type: {type(e).__name__}"""
     # Import the words
     added_count = 0
     skipped_count = 0
+    added_words = []
+    skipped_words = []
     
     for word, lang_code in words:
         # Create field data for this word
@@ -189,35 +174,64 @@ Exception type: {type(e).__name__}"""
                     elif 'synonym' in field_name.lower():
                         note.fields[i] = fields.get('Synonyms', '')
         
-        # Check if this note already exists (simple duplicate check)
-        existing = mw.col.find_notes(f'"note:{model_name}" "deck:{deck_name}" "{word}"')
+        # Check if this note already exists (more robust duplicate check)
+        # Search for notes in this deck that contain this exact word in the first field
+        search_query = f'deck:"{deck_name}" {model_fields[0]}:"{word}"'
+        existing = mw.col.find_notes(search_query)
         if existing:
             skipped_count += 1
+            skipped_words.append(word)
             continue
             
         # Add the note to the collection
         try:
             mw.col.add_note(note, deck_id)
             added_count += 1
+            added_words.append(word)
         except Exception as e:
             # If there's an error adding this specific note, skip it
             skipped_count += 1
+            skipped_words.append(word)
             continue
     
     # Save changes
     mw.col.save()
     
     # Show completion message
-    message = f"Import complete!\n\n"
-    message += f"• {added_count} cards added to deck '{deck_name}'\n"
-    if skipped_count > 0:
-        message += f"• {skipped_count} words skipped (duplicates or errors)\n"
-    message += f"• Using note type: {model_name}"
+    total_words = len(words)
+    
+    # Use HTML for rich text in the dialog
+    message = f"""
+Import complete for deck '<b>{deck_name}</b>'.<br>
+Processed {total_words} words using note type '<b>{model_name}</b>'.
+<hr>
+"""
+
+    if added_words:
+        added_list = "".join(f"<li>{w}</li>" for w in sorted(added_words))
+        message += f"""
+<details>
+    <summary><b>{len(added_words)} new cards added</b></summary>
+    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">{added_list}</ul>
+</details>
+"""
+
+    if skipped_words:
+        skipped_list = "".join(f"<li>{w}</li>" for w in sorted(skipped_words))
+        message += f"""
+<details>
+    <summary><b>{len(skipped_words)} words skipped</b> (already exist)</summary>
+    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">{skipped_list}</ul>
+</details>
+"""
     
     showInfo(message)
     
     # Also show a quick tooltip
-    tooltip(f"Added {added_count} new cards to '{deck_name}'")
+    if skipped_count > 0:
+        tooltip(f"Added {added_count} new cards, skipped {skipped_count} duplicates")
+    else:
+        tooltip(f"Added {added_count} new cards to '{deck_name}'")
 
 
 def create_anki_action() -> QAction:
