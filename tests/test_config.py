@@ -25,26 +25,33 @@ class TestConfig(unittest.TestCase):
         self.assertIsInstance(config, dict, "Config should be a dictionary")
 
     def test_config_has_required_keys(self):
-        """Test that config.json has all required template keys."""
+        """Test that config.json has all required keys for the new system."""
         with open(self.config_path, 'r') as f:
             config = json.load(f)
         
-        required_keys = ['front_template', 'back_template', 'css']
+        required_keys = ['deck_name', 'card_level']
         for key in required_keys:
             self.assertIn(key, config, f"Config should contain {key}")
 
-    def test_templates_have_required_fields(self):
-        """Test that templates contain the expected field placeholders."""
+    def test_card_level_is_valid(self):
+        """Test that card_level is set to a valid value."""
         with open(self.config_path, 'r') as f:
             config = json.load(f)
         
-        # Front template should contain Word field
-        self.assertIn('{{Word}}', config['front_template'], 
-                     "Front template should contain {{Word}} field")
+        valid_levels = ['basic', 'intermediate', 'full']
+        card_level = config.get('card_level')
         
-        # Back template should contain Definition field
-        self.assertIn('{{Definition}}', config['back_template'],
-                     "Back template should contain {{Definition}} field")
+        self.assertIn(card_level, valid_levels, 
+                     f"card_level should be one of {valid_levels}, got {card_level}")
+
+    def test_deck_name_is_string(self):
+        """Test that deck_name is a non-empty string."""
+        with open(self.config_path, 'r') as f:
+            config = json.load(f)
+        
+        deck_name = config.get('deck_name')
+        self.assertIsInstance(deck_name, str, "deck_name should be a string")
+        self.assertTrue(len(deck_name) > 0, "deck_name should not be empty")
 
 
 if __name__ == '__main__':

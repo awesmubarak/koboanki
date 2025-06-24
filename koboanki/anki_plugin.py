@@ -15,7 +15,7 @@ from aqt.utils import showInfo, tooltip  # type: ignore
 from anki.notes import Note  # type: ignore
 
 from .core import fetch_definition, fetch_word_data, find_kobo_db, get_kobo_wordlist
-from .template_processor import process_word_for_anki, TemplateConfig
+from .card_builder import CardLevel, build_card_fields, get_card_template
 
 
 def get_config():
@@ -23,18 +23,20 @@ def get_config():
     return mw.addonManager.getConfig(__name__)
 
 
-def get_card_templates():
-    """Get the configured card templates for creating Anki cards.
+def get_card_level():
+    """Get the configured card detail level.
     
     Returns:
-        dict: Dictionary containing front_template, back_template, and css
+        CardLevel: The configured detail level for cards
     """
     config = get_config()
-    return {
-        'front_template': config.get('front_template', '{{Word}}'),
-        'back_template': config.get('back_template', '{{AllDefinitions}}'),
-        'css': config.get('css', '.card { font-family: arial; font-size: 20px; }')
-    }
+    level_str = config.get('card_level', 'intermediate')
+    
+    # Convert string to enum, with fallback
+    try:
+        return CardLevel(level_str)
+    except ValueError:
+        return CardLevel.INTERMEDIATE
 
 
 def get_deck_name():
@@ -51,39 +53,46 @@ def get_or_create_kobo_note_type():
     """Get or create the 'KoboAnki Word' note type.
 
     Ensures a consistent note type is used for all imports, with fields
-    matching the data we extract. Uses templates from config.json.
+    matching the data we extract. Uses level-based templates.
     """
     model_name = "KoboAnki Word"
     model = mw.col.models.by_name(model_name)
 
     if model is None:
         # Model doesn't exist, create it from scratch
-        templates = get_card_templates()
+        level = get_card_level()
+        try:
+            template_data = get_card_template(level)
+        except Exception as e:
+            # Fallback to basic template if loading fails
+            showInfo(f"Warning: Could not load template for level {level.value}, using basic template: {e}")
+            template_data = get_card_template(CardLevel.BASIC)
+        
         model = mw.col.models.new(model_name)
 
-        # Define fields
+        # Define all possible fields for all levels
         field_names = [
-            "Word", "Language", "PartOfSpeech", "AllDefinitions", "Etymology",
-            "Pronunciation", "Examples", "Synonyms", "DerivedTerms",
-            "DefinitionCount", "HasMultipleDefinitions", "HasPartOfSpeech",
+            "Word", "Language", "PartOfSpeech", "DefinitionList", "Etymology",
+            "Pronunciation", "Examples", "Synonyms", "DerivedTerms", "Categories",
+            "AllExamples", "AllSynonyms", "HasDefinitions", "HasPartOfSpeech",
             "HasEtymology", "HasPronunciation", "HasSynonyms", "HasExamples",
-            "HasDerivedTerms"
+            "HasDerivedTerms", "HasCategories"
         ]
         for field_name in field_names:
             mw.col.models.add_field(model, mw.col.models.new_field(field_name))
 
         # Create card template
         template = mw.col.models.new_template("KoboAnki Card")
-        template['qfmt'] = templates['front_template']
-        template['afmt'] = templates['back_template']
+        template['qfmt'] = template_data.front
+        template['afmt'] = template_data.back
         mw.col.models.add_template(model, template)
 
         # Set CSS
-        model['css'] = templates['css']
+        model['css'] = template_data.css
 
         # Add the model to the collection
         mw.col.models.add(model)
-        mw.col.save(f"Created new note type: {model_name}")
+        mw.col.models.save(model)
         tooltip(f"Created new note type: {model_name}")
 
     return model
@@ -99,36 +108,37 @@ def create_card_fields(word: str, lang_code: str) -> dict:
     Returns:
         Dictionary of field names to values for Anki card creation
     """
+    level = get_card_level()
+    
     # Try enhanced extraction first
     word_data = fetch_word_data(word, lang_code)
     
     if word_data:
-        # Use rich template processing
-        return process_word_for_anki(word_data)
+        # Use new level-based card builder
+        return build_card_fields(word_data, level)
     else:
         # Fallback to simple extraction for backward compatibility
         definition = fetch_definition(word, lang_code)
-        return {
+        
+        # Return minimal fields for fallback
+        fields = {
             "Word": word,
             "Language": lang_code,
-            "PrimaryDefinition": definition,
-            "AllDefinitions": definition,
-            "DefinitionCount": "1" if definition else "0",
-            # Empty values for conditional fields
-            "HasMultipleDefinitions": "",
-            "HasPartOfSpeech": "",
-            "HasEtymology": "",
-            "HasPronunciation": "",
-            "HasSynonyms": "",
-            "HasExamples": "",
-            "HasDerivedTerms": "",
-            "PartOfSpeech": "",
-            "Etymology": "",
-            "Pronunciation": "",
-            "Synonyms": "",
-            "Examples": "",
-            "DerivedTerms": ""
+            "DefinitionList": f"<li>{definition}</li>" if definition else "",
+            "HasDefinitions": "1" if definition else "",
         }
+        
+        # Add empty values for all other possible fields
+        empty_fields = [
+            "PartOfSpeech", "Etymology", "Pronunciation", "Examples", "Synonyms", 
+            "DerivedTerms", "Categories", "AllExamples", "AllSynonyms",
+            "HasPartOfSpeech", "HasEtymology", "HasPronunciation", "HasSynonyms",
+            "HasExamples", "HasDerivedTerms", "HasCategories"
+        ]
+        for field in empty_fields:
+            fields[field] = ""
+            
+        return fields
 
 
 def _run_import() -> None:
@@ -140,18 +150,8 @@ def _run_import() -> None:
     # Find the Kobo database
     db_path = find_kobo_db()
     if not db_path:
-        # Try the test database for development
-        addon_module_dir = os.path.dirname(__file__)
-        project_root = os.path.dirname(addon_module_dir)
-        test_db_path = os.path.join(project_root, "tests", "data", "TestKoboReader.sqlite")
-        
-        if os.path.isfile(test_db_path):
-            db_path = test_db_path
-            # Only show debug info if there are issues
-            # showInfo(f"Using test database for development: {test_db_path}")
-        else:
-            showInfo("No Kobo device found. Please connect your Kobo eReader.")
-            return
+        showInfo("No Kobo device found. Please connect your Kobo eReader.")
+        return
 
     # Fetch the word list from Kobo
     try:
@@ -194,9 +194,14 @@ def _run_import() -> None:
         note = Note(mw.col, model)
         
         # Map our generated fields to the note's fields by name
+        # Get field names from the model to map to indices
+        model_fields = [f['name'] for f in model['flds']]
+        
         for field_name, value in fields.items():
-            if field_name in note:
-                note[field_name] = str(value)
+            if field_name in model_fields:
+                field_index = model_fields.index(field_name)
+                if field_index < len(note.fields):
+                    note.fields[field_index] = str(value)
 
         # Add the note to the collection
         try:

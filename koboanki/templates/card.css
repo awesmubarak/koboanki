@@ -1,0 +1,191 @@
+.card {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 18px;
+    text-align: center;
+    color: #2c3e50;
+    background-color: #ffffff;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Word display */
+.headword {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #34495e;
+}
+
+.pos {
+    font-size: 16px;
+    color: #7f8c8d;
+    font-style: italic;
+    margin-left: 8px;
+}
+
+.pronunciation {
+    font-size: 16px;
+    color: #7f8c8d;
+    margin: 8px 0 20px 0;
+}
+
+.ipa {
+    font-family: "Charis SIL", "Doulos SIL", serif;
+}
+
+/* Definitions */
+.definitions {
+    text-align: left;
+    margin: 20px 0;
+    font-size: 18px;
+    line-height: 1.7;
+    padding-left: 20px;
+}
+
+.definitions li {
+    margin-bottom: 12px;
+}
+
+/* Inline examples within definitions */
+.example-inline {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    border-radius: 4px;
+    font-style: italic;
+    font-size: 16px;
+    color: #664d03;
+}
+
+/* Content sections */
+.examples {
+    text-align: left;
+    margin: 15px 0;
+    padding: 12px;
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 4px;
+    font-style: italic;
+    color: #664d03;
+}
+
+.synonyms {
+    text-align: left;
+    margin: 15px 0;
+    padding: 12px;
+    background-color: #e8f5e8;
+    border-left: 4px solid #2ecc71;
+    border-radius: 4px;
+}
+
+.related {
+    text-align: left;
+    margin: 15px 0;
+    padding: 12px;
+    background-color: #e8f5e8;
+    border-left: 4px solid #27ae60;
+    border-radius: 4px;
+}
+
+.etymology {
+    text-align: left;
+    margin: 15px 0;
+    padding: 12px;
+    background-color: #f3e5f5;
+    border-left: 4px solid #9b59b6;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+/* Labels and helpers */
+.label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.sense {
+    font-style: italic;
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+/* Section headings for full template */
+h3 {
+    color: #34495e;
+    font-size: 20px;
+    margin: 20px 0 10px 0;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 5px;
+}
+
+/* Lists */
+ul.synonyms, ul.related {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul.synonyms li, ul.related li {
+    display: inline-block;
+    margin-right: 12px;
+    margin-bottom: 6px;
+    padding: 4px 8px;
+    background: #e8f5e8;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #1e7e34;
+}
+
+/* Inline synonym items for intermediate level */
+.synonym-item {
+    display: inline-block;
+    padding: 3px 8px;
+    margin: 2px;
+    background: #e8f5e8;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #1e7e34;
+}
+
+/* Translations table for full template */
+.translations {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.translations th, .translations td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.translations th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+/* Utilities */
+strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+em {
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+small {
+    font-size: 14px;
+    color: #95a5a6;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #bdc3c7, transparent);
+    margin: 20px 0;
+} 
