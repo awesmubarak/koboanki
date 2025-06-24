@@ -47,6 +47,48 @@ def get_deck_name():
     return config.get('deck_name', 'Kobo Vocabulary')
 
 
+def get_or_create_kobo_note_type():
+    """Get or create the 'KoboAnki Word' note type.
+
+    Ensures a consistent note type is used for all imports, with fields
+    matching the data we extract. Uses templates from config.json.
+    """
+    model_name = "KoboAnki Word"
+    model = mw.col.models.by_name(model_name)
+
+    if model is None:
+        # Model doesn't exist, create it from scratch
+        templates = get_card_templates()
+        model = mw.col.models.new(model_name)
+
+        # Define fields
+        field_names = [
+            "Word", "Language", "PartOfSpeech", "AllDefinitions", "Etymology",
+            "Pronunciation", "Examples", "Synonyms", "DerivedTerms",
+            "DefinitionCount", "HasMultipleDefinitions", "HasPartOfSpeech",
+            "HasEtymology", "HasPronunciation", "HasSynonyms", "HasExamples",
+            "HasDerivedTerms"
+        ]
+        for field_name in field_names:
+            mw.col.models.add_field(model, mw.col.models.new_field(field_name))
+
+        # Create card template
+        template = mw.col.models.new_template("KoboAnki Card")
+        template['qfmt'] = templates['front_template']
+        template['afmt'] = templates['back_template']
+        mw.col.models.add_template(model, template)
+
+        # Set CSS
+        model['css'] = templates['css']
+
+        # Add the model to the collection
+        mw.col.models.add(model)
+        mw.col.save(f"Created new note type: {model_name}")
+        tooltip(f"Created new note type: {model_name}")
+
+    return model
+
+
 def create_card_fields(word: str, lang_code: str) -> dict:
     """Create template fields for a word using enhanced data extraction.
     
@@ -125,13 +167,9 @@ def _run_import() -> None:
     # Get or create the deck
     deck_id = mw.col.decks.id(deck_name)
     
-    # Find the note type (model) to use
-    model_name = "Basic"  # Start with Anki's default Basic note type
-    model = mw.col.models.by_name(model_name)
-    if not model:
-        # If Basic doesn't exist, use the first available model
-        model = mw.col.models.all()[0]
-        model_name = model['name']
+    # Get or create the custom note type for Kobo words
+    model = get_or_create_kobo_note_type()
+    model_name = model['name']
     
     # Import the words
     added_count = 0
@@ -143,46 +181,23 @@ def _run_import() -> None:
         # Create field data for this word
         fields = create_card_fields(word, lang_code)
         
-        # Create a new note
-        note = Note(mw.col, model)
-        
-        # Map our fields to the note type's fields
-        # For Basic note type: Front and Back
-        # For other note types: try to map intelligently
-        model_fields = [f['name'] for f in model['flds']]
-        
-        if len(model_fields) >= 2:
-            # Set the first field (usually "Front" or "Question")
-            note.fields[0] = fields.get('Word', word)
-            
-            # Set the second field (usually "Back" or "Answer") 
-            # Use our rich AllDefinitions content
-            note.fields[1] = fields.get('AllDefinitions', fields.get('PrimaryDefinition', ''))
-            
-            # If there are more fields, try to fill them with relevant data
-            for i, field_name in enumerate(model_fields[2:], start=2):
-                if i < len(note.fields):
-                    # Try to match field names to our data
-                    if 'language' in field_name.lower():
-                        note.fields[i] = lang_code
-                    elif 'pronunciation' in field_name.lower() or 'ipa' in field_name.lower():
-                        note.fields[i] = fields.get('Pronunciation', '')
-                    elif 'etymology' in field_name.lower():
-                        note.fields[i] = fields.get('Etymology', '')
-                    elif 'example' in field_name.lower():
-                        note.fields[i] = fields.get('Examples', '')
-                    elif 'synonym' in field_name.lower():
-                        note.fields[i] = fields.get('Synonyms', '')
-        
         # Check if this note already exists (more robust duplicate check)
-        # Search for notes in this deck that contain this exact word in the first field
-        search_query = f'deck:"{deck_name}" {model_fields[0]}:"{word}"'
+        # Search for notes of our custom type in this deck with the same Word field
+        search_query = f'deck:"{deck_name}" "note:{model_name}" Word:"{word}"'
         existing = mw.col.find_notes(search_query)
         if existing:
             skipped_count += 1
             skipped_words.append(word)
             continue
-            
+
+        # Create a new note
+        note = Note(mw.col, model)
+        
+        # Map our generated fields to the note's fields by name
+        for field_name, value in fields.items():
+            if field_name in note:
+                note[field_name] = str(value)
+
         # Add the note to the collection
         try:
             mw.col.add_note(note, deck_id)
@@ -191,7 +206,7 @@ def _run_import() -> None:
         except Exception as e:
             # If there's an error adding this specific note, skip it
             skipped_count += 1
-            skipped_words.append(word)
+            skipped_words.append(f"{word} (error: {e})")
             continue
     
     # Save changes
