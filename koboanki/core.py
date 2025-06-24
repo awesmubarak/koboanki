@@ -16,6 +16,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import List, Optional, Tuple, Dict, Any
+import re
 
 __all__ = [
     "normalise_word",
@@ -92,9 +93,15 @@ class WordData:
 # ---------------------------------------------------------------------------
 
 def normalise_word(word: str) -> str:  # noqa: D401 – simple verb
-    """Return *word* in lowercase NFC form."""
-
-    return unicodedata.normalize("NFC", word).lower()
+    """Return *word* in lowercase NFC form with trailing punctuation removed."""
+    # First normalize and convert to lowercase
+    normalized = unicodedata.normalize("NFC", word).lower()
+    
+    # Strip punctuation from the end, but preserve hyphens and apostrophes within words
+    # This regex removes trailing punctuation but keeps internal punctuation
+    cleaned = re.sub(r'[^\w\s\'-]+$', '', normalized)
+    
+    return cleaned
 
 
 def find_kobo_db() -> Optional[str]:

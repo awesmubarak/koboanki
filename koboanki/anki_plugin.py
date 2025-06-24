@@ -174,12 +174,24 @@ def _run_import() -> None:
     # Import the words
     added_count = 0
     skipped_count = 0
+    failed_count = 0
     added_words = []
     skipped_words = []
+    failed_words = []
     
     for word, lang_code in words:
         # Create field data for this word
         fields = create_card_fields(word, lang_code)
+        
+        # Check if the card has meaningful content (definitions)
+        has_definitions = fields.get("HasDefinitions") == "1"
+        definition_list = fields.get("DefinitionList", "").strip()
+        
+        if not has_definitions or not definition_list or definition_list == "<li></li>":
+            # Word lookup failed - track but don't add to deck
+            failed_count += 1
+            failed_words.append(word)
+            continue
         
         # Check if this note already exists (more robust duplicate check)
         # Search for notes of our custom type in this deck with the same Word field
@@ -209,9 +221,9 @@ def _run_import() -> None:
             added_count += 1
             added_words.append(word)
         except Exception as e:
-            # If there's an error adding this specific note, skip it
-            skipped_count += 1
-            skipped_words.append(f"{word} (error: {e})")
+            # If there's an error adding this specific note, track as failed
+            failed_count += 1
+            failed_words.append(f"{word} (error: {e})")
             continue
     
     # Save changes
@@ -244,12 +256,21 @@ Processed {total_words} words using note type '<b>{model_name}</b>'.
     <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">{skipped_list}</ul>
 </details>
 """
+
+    if failed_words:
+        failed_list = "".join(f"<li>{w}</li>" for w in sorted(failed_words))
+        message += f"""
+<details>
+    <summary><b>{len(failed_words)} words failed</b> (no definition found)</summary>
+    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">{failed_list}</ul>
+</details>
+"""
     
     showInfo(message)
     
     # Also show a quick tooltip
-    if skipped_count > 0:
-        tooltip(f"Added {added_count} new cards, skipped {skipped_count} duplicates")
+    if failed_count > 0 or skipped_count > 0:
+        tooltip(f"Added {added_count} new cards, skipped {skipped_count} duplicates, {failed_count} failed")
     else:
         tooltip(f"Added {added_count} new cards to '{deck_name}'")
 
