@@ -25,7 +25,7 @@ def create_mock_response(data: str, status: int = 200) -> MagicMock:
 class TestFetchDefinition:
     """Test the fetch_definition function comprehensively."""
 
-    def test_unsupported_language_returns_empty_string(self):
+    def test_unsupported_language_returns_empty_string(self) -> None:
         """Test that unsupported language codes return empty string."""
         result = fetch_definition("word", "unsupported")
         assert result == ""
@@ -34,7 +34,7 @@ class TestFetchDefinition:
         assert result == ""
 
     @patch('urllib.request.urlopen')
-    def test_successful_definition_fetch(self, mock_urlopen):
+    def test_successful_definition_fetch(self, mock_urlopen: MagicMock) -> None:
         """Test successful API response with valid definition."""
         mock_data = {
             "senses": [
@@ -54,7 +54,7 @@ class TestFetchDefinition:
         mock_urlopen.assert_called_once_with(expected_url, timeout=5)
 
     @patch('urllib.request.urlopen')
-    def test_404_error_returns_empty_string(self, mock_urlopen):
+    def test_404_error_returns_empty_string(self, mock_urlopen: MagicMock) -> None:
         """Test that 404 errors (word not found) return empty string."""
         from email.message import EmailMessage
         mock_urlopen.side_effect = urllib.error.HTTPError(
@@ -65,22 +65,26 @@ class TestFetchDefinition:
         assert result == ""
 
     @patch('urllib.request.urlopen')
-    def test_other_http_errors_are_raised(self, mock_urlopen):
+    def test_other_http_errors_are_raised(self, mock_urlopen: MagicMock) -> None:
         """Test that non-404 HTTP errors are propagated."""
         # Clear cache to ensure fresh test
         fetch_definition.cache_clear()
         
         from email.message import EmailMessage
         mock_urlopen.side_effect = urllib.error.HTTPError(
-            url="test", code=500, msg="Internal Server Error", hdrs=EmailMessage(), fp=None
+            url="test",
+            code=500,
+            msg="Internal Server Error",
+            hdrs=EmailMessage(),
+            fp=None
         )
         
         with pytest.raises(urllib.error.HTTPError) as exc_info:
-            fetch_definition("test_http_error", "en")  # Use unique word to avoid cache issues
+            fetch_definition("test_http_error", "en")  # Use unique word
         assert exc_info.value.code == 500
 
     @patch('urllib.request.urlopen')
-    def test_network_errors_are_raised(self, mock_urlopen):
+    def test_network_errors_are_raised(self, mock_urlopen: MagicMock) -> None:
         """Test that URLError (network errors) are propagated."""
         # Clear cache to ensure fresh test
         fetch_definition.cache_clear()
@@ -88,13 +92,17 @@ class TestFetchDefinition:
         mock_urlopen.side_effect = urllib.error.URLError("Network unreachable")
         
         with pytest.raises(urllib.error.URLError):
-            fetch_definition("test_url_error", "en")  # Use unique word to avoid cache issues
+            fetch_definition("test_url_error", "en")  # Use unique word
 
     @patch('urllib.request.urlopen')
-    def test_missing_senses_returns_empty_string(self, mock_urlopen):
+    def test_missing_senses_returns_empty_string(self, mock_urlopen: MagicMock) -> None:
         """Test that responses without senses field return empty string."""
         # JSON Lines with objects that don't have senses
-        mock_jsonl = json.dumps({"word": "test", "pos": "noun"}) + "\n" + json.dumps({"etymology": "from latin"})
+        mock_jsonl = (
+            json.dumps({"word": "test", "pos": "noun"})
+            + "\n"
+            + json.dumps({"etymology": "from latin"})
+        )
         
         mock_response = create_mock_response(mock_jsonl)
         mock_urlopen.return_value = mock_response
@@ -103,7 +111,9 @@ class TestFetchDefinition:
         assert result == ""
 
     @patch('urllib.request.urlopen')
-    def test_empty_api_response_returns_empty_string(self, mock_urlopen):
+    def test_empty_api_response_returns_empty_string(
+        self, mock_urlopen: MagicMock
+    ) -> None:
         """Test that empty API responses return empty string."""
         mock_response = create_mock_response(json.dumps({}))
         mock_urlopen.return_value = mock_response
@@ -112,7 +122,7 @@ class TestFetchDefinition:
         assert result == ""
 
     @patch('urllib.request.urlopen')
-    def test_caching_behavior(self, mock_urlopen):
+    def test_caching_behavior(self, mock_urlopen: MagicMock) -> None:
         """Test that the LRU cache works correctly."""
         # Clear the cache first to avoid interference from other tests
         fetch_definition.cache_clear()

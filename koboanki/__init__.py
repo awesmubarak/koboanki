@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-"""Package root – re-export core helpers and (when inside Anki) register UI."""
-
 from importlib import import_module
 from importlib.util import find_spec
 
 from .core import *  # re-export helper API  noqa: F403,F401
+
+"""Package root – re-export core helpers and (when inside Anki) register UI."""
 
 # Only register the GUI integration when running *inside* Anki – i.e. both the
 # `aqt` package can be imported **and** it already exposed a `mw` (main

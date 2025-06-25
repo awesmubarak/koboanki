@@ -1,18 +1,22 @@
 """Tests for the card builder system."""
 
-import pytest
-from koboanki.card_builder import CardBuilder, CardLevel, build_card_fields, get_card_template
-from koboanki.core import WordData, WordSense, WordExample
+from koboanki.card_builder import (
+    CardBuilder,
+    CardLevel,
+    build_card_fields,
+    get_card_template,
+)
+from koboanki.core import WordData, WordExample, WordSense
 
 
-def test_card_levels():
+def test_card_levels() -> None:
     """Test that all card levels are properly defined."""
     assert CardLevel.BASIC.value == "basic"
     assert CardLevel.INTERMEDIATE.value == "intermediate"
     assert CardLevel.FULL.value == "full"
 
 
-def test_basic_level_fields():
+def test_basic_level_fields() -> None:
     """Test basic level field generation."""
     # Create minimal test data
     word_data = WordData(
@@ -33,7 +37,7 @@ def test_basic_level_fields():
     assert fields["HasDefinitions"] == "1"
 
 
-def test_intermediate_level_fields():
+def test_intermediate_level_fields() -> None:
     """Test intermediate level field generation."""
     # Create richer test data
     word_data = WordData(
@@ -69,7 +73,7 @@ def test_intermediate_level_fields():
     assert fields["HasExamples"] == ""  # No separate examples field anymore
 
 
-def test_full_level_fields():
+def test_full_level_fields() -> None:
     """Test full level field generation."""
     # Create comprehensive test data
     word_data = WordData(
@@ -104,7 +108,7 @@ def test_full_level_fields():
     assert fields["HasCategories"] == "1"
 
 
-def test_convenience_functions():
+def test_convenience_functions() -> None:
     """Test the convenience functions."""
     word_data = WordData(
         word="convenience",
@@ -123,7 +127,7 @@ def test_convenience_functions():
     assert template.css
 
 
-def test_html_escaping():
+def test_html_escaping() -> None:
     """Test that HTML is properly escaped."""
     word_data = WordData(
         word="<script>",
@@ -139,7 +143,7 @@ def test_html_escaping():
     assert "&amp;" in fields["DefinitionList"]
 
 
-def test_empty_data_handling():
+def test_empty_data_handling() -> None:
     """Test handling of empty or missing data."""
     # Test with minimal data
     word_data = WordData(word="empty", language="en")
@@ -155,7 +159,7 @@ def test_empty_data_handling():
     assert fields["DefinitionList"] == ""
 
 
-def test_field_limits():
+def test_field_limits() -> None:
     """Test that field content respects reasonable limits."""
     # Create data with many items
     many_synonyms = [{"word": f"synonym{i}"} for i in range(20)]

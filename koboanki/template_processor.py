@@ -7,10 +7,10 @@ that work with Anki's native conditional templating system.
 from __future__ import annotations
 
 import html
-from typing import Dict, List, Optional
 from dataclasses import dataclass
+from typing import Dict, Optional
 
-from .core import WordData, WordSense, WordExample
+from .core import WordData
 
 
 @dataclass
@@ -59,19 +59,49 @@ class TemplateProcessor:
             # Conditional flags
             "HasMultipleDefinitions": "1" if len(word_data.senses) > 1 else "",
             "HasPartOfSpeech": "1" if word_data.part_of_speech else "",
-            "HasEtymology": "1" if (word_data.etymology_text and self.config.include_etymology) else "",
-            "HasPronunciation": "1" if (word_data.pronunciation and self.config.include_pronunciation) else "",
-            "HasSynonyms": "1" if (word_data.synonyms and self.config.include_synonyms) else "",
-            "HasExamples": "1" if (self._has_examples(word_data) and self.config.include_examples) else "",
-            "HasDerivedTerms": "1" if (word_data.derived and self.config.include_derived_terms) else "",
+            "HasEtymology": (
+                "1"
+                if (word_data.etymology_text and self.config.include_etymology)
+                else ""
+            ),
+            "HasPronunciation": (
+                "1"
+                if (word_data.pronunciation and self.config.include_pronunciation)
+                else ""
+            ),
+            "HasSynonyms": (
+                "1" if (word_data.synonyms and self.config.include_synonyms) else ""
+            ),
+            "HasExamples": (
+                "1"
+                if (self._has_examples(word_data) and self.config.include_examples)
+                else ""
+            ),
+            "HasDerivedTerms": (
+                "1" if (word_data.derived and self.config.include_derived_terms) else ""
+            ),
         }
         
         # Add optional content fields (always include fields for template compatibility)
-        fields["Etymology"] = self._format_etymology(word_data) if self.config.include_etymology else ""
-        fields["Pronunciation"] = self._format_pronunciation(word_data) if self.config.include_pronunciation else ""
-        fields["Examples"] = self._format_examples(word_data) if self.config.include_examples else ""
-        fields["Synonyms"] = self._format_synonyms(word_data) if self.config.include_synonyms else ""
-        fields["DerivedTerms"] = self._format_derived_terms(word_data) if self.config.include_derived_terms else ""
+        fields["Etymology"] = (
+            self._format_etymology(word_data) if self.config.include_etymology else ""
+        )
+        fields["Pronunciation"] = (
+            self._format_pronunciation(word_data)
+            if self.config.include_pronunciation
+            else ""
+        )
+        fields["Examples"] = (
+            self._format_examples(word_data) if self.config.include_examples else ""
+        )
+        fields["Synonyms"] = (
+            self._format_synonyms(word_data) if self.config.include_synonyms else ""
+        )
+        fields["DerivedTerms"] = (
+            self._format_derived_terms(word_data)
+            if self.config.include_derived_terms
+            else ""
+        )
             
         return fields
     
@@ -223,7 +253,9 @@ def get_default_processor() -> TemplateProcessor:
     return TemplateProcessor()
 
 
-def process_word_for_anki(word_data: WordData, config: Optional[TemplateConfig] = None) -> Dict[str, str]:
+def process_word_for_anki(
+    word_data: WordData, config: Optional[TemplateConfig] = None
+) -> Dict[str, str]:
     """Convenience function to process word data for Anki templates.
     
     Args:

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import unicodedata
 import urllib.error
@@ -15,8 +16,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import List, Optional, Tuple, Dict, Any
-import re
+from typing import Any, Dict, List, Optional
 
 __all__ = [
     "normalise_word",
@@ -63,7 +63,7 @@ class WordData:
     synonyms: List[Dict[str, Any]] = field(default_factory=list)
     forms: List[Dict[str, Any]] = field(default_factory=list)
     etymology_text: Optional[str] = None
-    pronunciation: List[Dict[str, Any]] = field(default_factory=list)  # IPA, audio, etc.
+    pronunciation: List[Dict[str, Any]] = field(default_factory=list)  # IPA, audio
     hyponyms: List[Dict[str, Any]] = field(default_factory=list)  # More specific terms
     derived: List[Dict[str, Any]] = field(default_factory=list)  # Derived terms
     categories: List[str] = field(default_factory=list)  # Top-level categories
@@ -181,7 +181,7 @@ def fetch_word_data(word: str, lang_code: str) -> Optional[WordData]:
                     if line.strip():
                         try:
                             data = json.loads(line)
-                            if "senses" in data:  # This line contains the main word data
+                            if "senses" in data:  # This line contains main word data
                                 return _parse_word_data(data, word, lang_code)
                         except json.JSONDecodeError:
                             continue  # Skip malformed lines
@@ -235,7 +235,9 @@ def _parse_word_data(data: Dict[str, Any], word: str, lang_code: str) -> WordDat
         # Extract raw glosses
         raw_glosses = sense_data.get("raw_glosses", [])
         if raw_glosses:
-            sense.raw_glosses = raw_glosses if isinstance(raw_glosses, list) else [str(raw_glosses)]
+            sense.raw_glosses = (
+                raw_glosses if isinstance(raw_glosses, list) else [str(raw_glosses)]
+            )
         
         # Extract categories and tags
         sense.categories = sense_data.get("categories", [])

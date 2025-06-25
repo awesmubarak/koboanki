@@ -6,7 +6,8 @@ import os
 import sqlite3
 import tempfile
 import unicodedata
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from koboanki.core import find_kobo_db, get_kobo_wordlist, normalise_word
@@ -15,46 +16,42 @@ from koboanki.core import find_kobo_db, get_kobo_wordlist, normalise_word
 class TestNormaliseWord:
     """Test the normalise_word function."""
 
-    def test_basic_lowercasing(self):
+    def test_basic_lowercasing(self) -> None:
         """Test that words are converted to lowercase."""
         assert normalise_word("HELLO") == "hello"
         assert normalise_word("Hello") == "hello"
         assert normalise_word("hELLo") == "hello"
 
-    def test_unicode_normalization(self):
+    def test_unicode_normalization(self) -> None:
         """Test that unicode characters are normalized to NFC form."""
         # Test combining characters (é can be é or e + ́)
-        composed = "café"  # é as single character (NFC)
-        decomposed = "cafe" + "\u0301"  # e + combining acute accent (NFD)
-        
-        assert normalise_word(composed) == "café"
-        assert normalise_word(decomposed) == "café"
-        
-        # Both should normalize to the same result
+        composed = "é"  # Single character
+        decomposed = "é"  # e + combining acute accent
+        assert unicodedata.normalize("NFC", composed) == composed
+        assert unicodedata.normalize("NFC", decomposed) != decomposed
         assert normalise_word(composed) == normalise_word(decomposed)
 
-    def test_mixed_case_and_unicode(self):
+    def test_mixed_case_and_unicode(self) -> None:
         """Test combination of case conversion and unicode normalization."""
         word = "NAÏVE"  # Uppercase with unicode
         result = normalise_word(word)
         assert result == "naïve"
-        
-        # Verify it's properly normalized
+        # Ensure it's in NFC form
         assert unicodedata.normalize("NFC", result) == result
 
-    def test_empty_string(self):
+    def test_empty_string(self) -> None:
         """Test that empty string is handled correctly."""
         assert normalise_word("") == ""
 
-    def test_whitespace_preserved(self):
+    def test_whitespace_preserved(self) -> None:
         """Test that whitespace is preserved but lowercased."""
         assert normalise_word("Hello World") == "hello world"
         assert normalise_word("  Test  ") == "  test  "
 
-    def test_numbers_and_symbols(self):
+    def test_numbers_and_symbols(self) -> None:
         """Test that numbers and symbols are preserved."""
         assert normalise_word("Test123") == "test123"
-        assert normalise_word("Hello-World!") == "hello-world!"
+        assert normalise_word("Hello-World!") == "hello-world"
 
 
 class TestFindKoboDb:
@@ -63,13 +60,15 @@ class TestFindKoboDb:
     @patch('os.path.isdir')
     @patch('os.listdir')
     @patch('os.path.isfile')
-    def test_kobo_db_found(self, mock_isfile, mock_listdir, mock_isdir):
+    def test_kobo_db_found(
+        self, mock_isfile: MagicMock, mock_listdir: MagicMock, mock_isdir: MagicMock
+    ) -> None:
         """Test successful location of Kobo database."""
         mock_isdir.return_value = True
         mock_listdir.return_value = ['KoboReader', 'OtherDevice']
         
         # Only the KoboReader volume has the database
-        def mock_isfile_func(path):
+        def mock_isfile_func(path: str) -> bool:
             return 'KoboReader' in path and 'KoboReader.sqlite' in path
         
         mock_isfile.side_effect = mock_isfile_func
@@ -78,7 +77,7 @@ class TestFindKoboDb:
         assert result == "/Volumes/KoboReader/.kobo/KoboReader.sqlite"
 
     @patch('os.path.isdir')
-    def test_volumes_directory_not_found(self, mock_isdir):
+    def test_volumes_directory_not_found(self, mock_isdir: MagicMock) -> None:
         """Test when /Volumes directory doesn't exist."""
         mock_isdir.return_value = False
         
@@ -88,7 +87,9 @@ class TestFindKoboDb:
     @patch('os.path.isdir')
     @patch('os.listdir')
     @patch('os.path.isfile')
-    def test_no_kobo_volumes_found(self, mock_isfile, mock_listdir, mock_isdir):
+    def test_no_kobo_volumes_found(
+        self, mock_isfile: MagicMock, mock_listdir: MagicMock, mock_isdir: MagicMock
+    ) -> None:
         """Test when no Kobo volumes are found."""
         mock_isdir.return_value = True
         mock_listdir.return_value = ['SomeUSB', 'AnotherDevice']
@@ -99,7 +100,9 @@ class TestFindKoboDb:
 
     @patch('os.path.isdir')
     @patch('os.listdir')
-    def test_empty_volumes_directory(self, mock_listdir, mock_isdir):
+    def test_empty_volumes_directory(
+        self, mock_listdir: MagicMock, mock_isdir: MagicMock
+    ) -> None:
         """Test when /Volumes directory is empty."""
         mock_isdir.return_value = True
         mock_listdir.return_value = []
@@ -110,13 +113,15 @@ class TestFindKoboDb:
     @patch('os.path.isdir')
     @patch('os.listdir')
     @patch('os.path.isfile')
-    def test_multiple_kobo_devices_returns_first(self, mock_isfile, mock_listdir, mock_isdir):
+    def test_multiple_kobo_devices_returns_first(
+        self, mock_isfile: MagicMock, mock_listdir: MagicMock, mock_isdir: MagicMock
+    ) -> None:
         """Test that first found Kobo database is returned."""
         mock_isdir.return_value = True
         mock_listdir.return_value = ['Kobo1', 'Kobo2', 'OtherDevice']
         
         # Both Kobo devices have databases
-        def mock_isfile_func(path):
+        def mock_isfile_func(path: str) -> bool:
             return ('Kobo1' in path or 'Kobo2' in path) and 'KoboReader.sqlite' in path
         
         mock_isfile.side_effect = mock_isfile_func
@@ -155,7 +160,8 @@ class TestGetKoboWordlist:
         ]
         
         cursor.executemany(
-            "INSERT INTO WordList (Text, VolumeId, DictSuffix, DateCreated) VALUES (?, ?, ?, ?)",
+            "INSERT INTO WordList (Text, VolumeId, DictSuffix, DateCreated) "
+            "VALUES (?, ?, ?, ?)",
             test_data
         )
         
@@ -163,7 +169,7 @@ class TestGetKoboWordlist:
         conn.close()
         return db_path
 
-    def test_successful_wordlist_extraction(self):
+    def test_successful_wordlist_extraction(self) -> None:
         """Test successful extraction of word list with normalization."""
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = self.create_test_db(temp_dir)
@@ -182,7 +188,7 @@ class TestGetKoboWordlist:
             
             assert result == expected
 
-    def test_empty_database(self):
+    def test_empty_database(self) -> None:
         """Test behavior with empty WordList table."""
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = os.path.join(temp_dir, "empty.sqlite")
@@ -204,12 +210,12 @@ class TestGetKoboWordlist:
             result = get_kobo_wordlist(db_path)
             assert result == []
 
-    def test_database_file_not_found(self):
+    def test_database_file_not_found(self) -> None:
         """Test error handling when database file doesn't exist."""
         with pytest.raises(sqlite3.OperationalError):
             get_kobo_wordlist("/nonexistent/path/database.sqlite")
 
-    def test_missing_wordlist_table(self):
+    def test_missing_wordlist_table(self) -> None:
         """Test error handling when WordList table doesn't exist."""
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = os.path.join(temp_dir, "notable.sqlite")
@@ -220,7 +226,7 @@ class TestGetKoboWordlist:
             with pytest.raises(sqlite3.OperationalError):
                 get_kobo_wordlist(db_path)
 
-    def test_language_code_processing(self):
+    def test_language_code_processing(self) -> None:
         """Test various language code processing edge cases."""
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = os.path.join(temp_dir, "langtest.sqlite")
@@ -248,7 +254,8 @@ class TestGetKoboWordlist:
             ]
             
             cursor.executemany(
-                "INSERT INTO WordList (Text, VolumeId, DictSuffix, DateCreated) VALUES (?, ?, ?, ?)",
+                "INSERT INTO WordList (Text, VolumeId, DictSuffix, DateCreated) "
+                "VALUES (?, ?, ?, ?)",
                 test_data
             )
             

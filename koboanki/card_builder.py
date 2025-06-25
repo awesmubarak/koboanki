@@ -12,11 +12,11 @@ from __future__ import annotations
 import html
 import json
 import os
-from enum import Enum
-from typing import Dict, List, Optional
 from dataclasses import dataclass
+from enum import Enum
+from typing import Dict
 
-from .core import WordData, WordSense, WordExample
+from .core import WordData
 
 
 class CardLevel(Enum):
@@ -40,7 +40,7 @@ class CardBuilder:
     def __init__(self, level: CardLevel = CardLevel.FULL):
         """Initialize with specified detail level."""
         self.level = level
-        self._templates_cache = {}
+        self._templates_cache: dict[str, CardTemplate] = {}
         
     def build_fields(self, word_data: WordData) -> Dict[str, str]:
         """Convert WordData into level-appropriate field dictionary.
@@ -70,7 +70,9 @@ class CardBuilder:
     def get_template(self) -> CardTemplate:
         """Load the template for the current level."""
         if self.level.value not in self._templates_cache:
-            self._templates_cache[self.level.value] = self._load_template(self.level.value)
+            self._templates_cache[self.level.value] = self._load_template(
+                self.level.value
+            )
         return self._templates_cache[self.level.value]
     
     def _build_basic_fields(self, word_data: WordData) -> Dict[str, str]:
@@ -139,17 +141,17 @@ class CardBuilder:
         return "".join(definitions)
     
     def _format_detailed_definitions(self, word_data: WordData) -> str:
-        """Format definitions with context tags and examples inline for intermediate level."""
+        """Format definitions with context tags and examples inline for intermediate."""
         if not word_data.senses:
             return ""
             
         definitions = []
-        for i, sense in enumerate(word_data.senses[:4], 1):  # Limit to 4 for intermediate
+        for i, sense in enumerate(word_data.senses[:4], 1):  # Limit to 4
             if not sense.glosses:
                 continue
                 
             # Combine main glosses
-            main_def = self._escape_html("; ".join(sense.glosses[:2]))  # Max 2 glosses per sense
+            main_def = self._escape_html("; ".join(sense.glosses[:2]))  # Max 2 glosses
             
             # Add context tags if available
             if sense.tags:
@@ -161,8 +163,14 @@ class CardBuilder:
             # Add examples inline for intermediate level (1 example per sense max)
             if sense.examples:
                 example = sense.examples[0]  # Just the first example
-                text = example.text[:120] + "..." if len(example.text) > 120 else example.text
-                example_html = f'<div class="example-inline">"{self._escape_html(text)}"</div>'
+                text = (
+                    example.text[:120] + "..."
+                    if len(example.text) > 120
+                    else example.text
+                )
+                example_html = (
+                    f'<div class="example-inline">"{self._escape_html(text)}"</div>'
+                )
                 definition_html += example_html
             
             definition_html += "</li>"
@@ -199,8 +207,14 @@ class CardBuilder:
             # Add examples inline for full level
             if sense.examples:
                 for example in sense.examples[:2]:  # Max 2 examples per sense
-                    text = example.text[:100] + "..." if len(example.text) > 100 else example.text
-                    example_html = f'<div class="example-inline">"{self._escape_html(text)}"</div>'
+                    text = (
+                        example.text[:100] + "..."
+                        if len(example.text) > 100
+                        else example.text
+                    )
+                    example_html = (
+                        f'<div class="example-inline">"{self._escape_html(text)}"</div>'
+                    )
                     definition_html += example_html
             
             definition_html += "</li>"
@@ -216,11 +230,19 @@ class CardBuilder:
         
         for sense in word_data.senses:
             for example in sense.examples[:3]:  # Max 3 per sense for full
-                text = example.text[:150] + "..." if len(example.text) > 150 else example.text
+                text = (
+                    example.text[:150] + "..."
+                    if len(example.text) > 150
+                    else example.text
+                )
                 formatted = f'"{self._escape_html(text)}"'
                 
                 if example.reference:
-                    ref = example.reference[:30] + "..." if len(example.reference) > 30 else example.reference
+                    ref = (
+                        example.reference[:30] + "..."
+                        if len(example.reference) > 30
+                        else example.reference
+                    )
                     formatted += f" <small>—{self._escape_html(ref)}</small>"
                 
                 examples.append(formatted)
@@ -242,7 +264,9 @@ class CardBuilder:
         for syn in word_data.synonyms[:3]:  # Limit for intermediate
             word = syn.get('word', '')
             if word:
-                synonyms.append(f"<span class=\"synonym-item\">{self._escape_html(word)}</span>")
+                synonyms.append(
+                    f"<span class=\"synonym-item\">{self._escape_html(word)}</span>"
+                )
                 
         return " • ".join(synonyms)
     
@@ -263,7 +287,9 @@ class CardBuilder:
             tags = syn.get('tags', [])
             if tags:
                 context = ", ".join(tags[:2])
-                formatted += f' <span class="sense">({self._escape_html(context)})</span>'
+                formatted += (
+                    f' <span class="sense">({self._escape_html(context)})</span>'
+                )
             
             synonyms.append(f"<li>{formatted}</li>")
                 
@@ -342,7 +368,7 @@ class CardBuilder:
                 back=template_data['back'],
                 css=css_content
             )
-        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        except (FileNotFoundError, json.JSONDecodeError, KeyError):
             # Fallback to basic template if loading fails
             return CardTemplate(
                 front="{{Word}}",
@@ -352,7 +378,9 @@ class CardBuilder:
 
 
 # Convenience functions for the main module
-def build_card_fields(word_data: WordData, level: CardLevel = CardLevel.FULL) -> Dict[str, str]:
+def build_card_fields(
+    word_data: WordData, level: CardLevel = CardLevel.FULL
+) -> Dict[str, str]:
     """Build card fields for the specified level."""
     builder = CardBuilder(level)
     return builder.build_fields(word_data)

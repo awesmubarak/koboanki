@@ -7,23 +7,23 @@ into a Tools-menu action.
 
 from __future__ import annotations
 
-import os
+from typing import Any
 
-from aqt import mw  # type: ignore
-from aqt.qt import QAction  # type: ignore
-from aqt.utils import showInfo, tooltip  # type: ignore
-from anki.notes import Note  # type: ignore
+from anki.notes import Note
+from aqt import mw
+from aqt.qt import QAction
+from aqt.utils import showInfo, tooltip
 
-from .core import fetch_definition, fetch_word_data, find_kobo_db, get_kobo_wordlist
 from .card_builder import CardLevel, build_card_fields, get_card_template
+from .core import fetch_definition, fetch_word_data, find_kobo_db, get_kobo_wordlist
 
 
-def get_config():
+def get_config() -> dict[str, Any]:
     """Get the addon configuration from Anki's config system."""
-    return mw.addonManager.getConfig(__name__)
+    return mw.addonManager.getConfig(__name__)  # type: ignore[no-any-return]
 
 
-def get_card_level():
+def get_card_level() -> CardLevel:
     """Get the configured card detail level.
     
     Returns:
@@ -39,17 +39,17 @@ def get_card_level():
         return CardLevel.INTERMEDIATE
 
 
-def get_deck_name():
+def get_deck_name() -> str:
     """Get the configured deck name for importing Kobo words.
     
     Returns:
         str: The deck name to use for imports
     """
     config = get_config()
-    return config.get('deck_name', 'Kobo Vocabulary')
+    return config.get('deck_name', 'Kobo Vocabulary')  # type: ignore[no-any-return]
 
 
-def get_or_create_kobo_note_type():
+def get_or_create_kobo_note_type() -> Any:
     """Get or create the 'KoboAnki Word' note type.
 
     Ensures a consistent note type is used for all imports, with fields
@@ -65,7 +65,10 @@ def get_or_create_kobo_note_type():
             template_data = get_card_template(level)
         except Exception as e:
             # Fallback to basic template if loading fails
-            showInfo(f"Warning: Could not load template for level {level.value}, using basic template: {e}")
+            showInfo(
+                f"Warning: Could not load template for level {level.value}, "
+                f"using basic template: {e}"
+            )
             template_data = get_card_template(CardLevel.BASIC)
         
         model = mw.col.models.new(model_name)
@@ -98,7 +101,7 @@ def get_or_create_kobo_note_type():
     return model
 
 
-def create_card_fields(word: str, lang_code: str) -> dict:
+def create_card_fields(word: str, lang_code: str) -> dict[str, str]:
     """Create template fields for a word using enhanced data extraction.
     
     Args:
@@ -244,7 +247,9 @@ Processed {total_words} words using note type '<b>{model_name}</b>'.
         message += f"""
 <details>
     <summary><b>{len(added_words)} new cards added</b></summary>
-    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">{added_list}</ul>
+    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">
+        {added_list}
+    </ul>
 </details>
 """
 
@@ -253,7 +258,9 @@ Processed {total_words} words using note type '<b>{model_name}</b>'.
         message += f"""
 <details>
     <summary><b>{len(skipped_words)} words skipped</b> (already exist)</summary>
-    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">{skipped_list}</ul>
+    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">
+        {skipped_list}
+    </ul>
 </details>
 """
 
@@ -262,7 +269,9 @@ Processed {total_words} words using note type '<b>{model_name}</b>'.
         message += f"""
 <details>
     <summary><b>{len(failed_words)} words failed</b> (no definition found)</summary>
-    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">{failed_list}</ul>
+    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">
+        {failed_list}
+    </ul>
 </details>
 """
     
@@ -270,7 +279,10 @@ Processed {total_words} words using note type '<b>{model_name}</b>'.
     
     # Also show a quick tooltip
     if failed_count > 0 or skipped_count > 0:
-        tooltip(f"Added {added_count} new cards, skipped {skipped_count} duplicates, {failed_count} failed")
+        tooltip(
+            f"Added {added_count} new cards, skipped {skipped_count} duplicates, "
+            f"{failed_count} failed"
+        )
     else:
         tooltip(f"Added {added_count} new cards to '{deck_name}'")
 
@@ -278,7 +290,7 @@ Processed {total_words} words using note type '<b>{model_name}</b>'.
 def create_anki_action() -> QAction:
     """Create the menu action for the Kobo import."""
     action = QAction("Import Words from Kobo", mw)
-    action.triggered.connect(_run_import)  # type: ignore
+    action.triggered.connect(_run_import)
     return action
 
 
@@ -290,6 +302,6 @@ def setup() -> None:
 
 
 # Legacy initialization approach for backward compatibility
-def init_plugin():
+def init_plugin() -> None:
     """Initialize the plugin by adding it to Anki's Tools menu."""
     setup() 
