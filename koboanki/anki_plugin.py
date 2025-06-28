@@ -237,43 +237,21 @@ def _run_import() -> None:
     
     # Use HTML for rich text in the dialog
     message = f"""
-Import complete for deck '<b>{deck_name}</b>'.<br>
-Processed {total_words} words using note type '<b>{model_name}</b>'.
+Import complete for deck '<b>{deck_name}</b>'.
 <hr>
 """
 
     if added_words:
-        added_list = "".join(f"<li>{w}</li>" for w in sorted(added_words))
-        message += f"""
-<details>
-    <summary><b>{len(added_words)} new cards added</b></summary>
-    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">
-        {added_list}
-    </ul>
-</details>
-"""
+        added_list = ", ".join(sorted(added_words))
+        message += f"<b>{len(added_words)} new cards added</b><hr>{added_list}"
 
     if skipped_words:
-        skipped_list = "".join(f"<li>{w}</li>" for w in sorted(skipped_words))
-        message += f"""
-<details>
-    <summary><b>{len(skipped_words)} words skipped</b> (already exist)</summary>
-    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">
-        {skipped_list}
-    </ul>
-</details>
-"""
+        skipped_list = ", ".join(sorted(skipped_words))
+        message += f"<br><br><b>{len(skipped_words)} words skipped</b> (already exist)<hr>{skipped_list}"
 
     if failed_words:
-        failed_list = "".join(f"<li>{w}</li>" for w in sorted(failed_words))
-        message += f"""
-<details>
-    <summary><b>{len(failed_words)} words failed</b> (no definition found)</summary>
-    <ul style="list-style-type: none; padding-left: 1.2em; text-indent: -1.2em;">
-        {failed_list}
-    </ul>
-</details>
-"""
+        failed_list = ", ".join(sorted(failed_words))
+        message += f"<br><br><b>{len(failed_words)} words failed</b> (no definition found)<hr>{failed_list}"
     
     showInfo(message)
     
