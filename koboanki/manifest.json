@@ -2,7 +2,7 @@
     "name": "koboanki_dev",
     "package": "koboanki_dev",
     "author": "Awes Mubarak",
-    "version": "__VERSION__",
+    "version": "3.0.0",
     "conflicts": [],
     "mod": 0
 }
